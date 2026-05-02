@@ -1,0 +1,433 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    if (window.location.protocol === "file:") {
+      var page = window.location.pathname.split("/").pop() || "index.html";
+      window.location.replace("http://localhost:3000/" + page);
+    }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusMart - College Marketplace</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Forgot password modal */
+    .fp-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      backdrop-filter: blur(4px);
+    }
+    .fp-overlay.open { display: flex; }
+
+    .fp-modal {
+      background: #fff;
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+      animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .fp-modal h3 {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #111827;
+      margin-bottom: 0.3rem;
+    }
+    .fp-modal .fp-sub {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .fp-step { display: none; }
+    .fp-step.active { display: block; }
+
+    .fp-code-box {
+      background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+      border: 2px solid #7c3aed;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .fp-code-box .fp-code-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #6d28d9;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.4rem;
+    }
+    .fp-code-box .fp-code-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #4c1d95;
+      letter-spacing: 6px;
+      font-family: monospace;
+    }
+    .fp-code-box .fp-code-timer {
+      font-size: 0.75rem;
+      color: #7c3aed;
+      margin-top: 0.3rem;
+    }
+
+    .fp-modal-btns {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .fp-btn-cancel {
+      flex: 1;
+      padding: 0.65rem;
+      background: #f3f4f6;
+      color: #6b7280;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .fp-btn-cancel:hover { background: #e5e7eb; }
+
+    .fp-btn-primary {
+      flex: 2;
+      padding: 0.65rem;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.18s;
+    }
+    .fp-btn-primary:hover { opacity: 0.88; }
+    .fp-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .fp-alert {
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .fp-alert.show { display: block; }
+    .fp-alert.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .fp-alert.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 0.82rem;
+      color: #7c3aed;
+      font-weight: 600;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Forgot Password Modal ── -->
+  <div class="fp-overlay" id="fp-overlay">
+    <div class="fp-modal">
+
+      <!-- Step 1: Enter email -->
+      <div class="fp-step active" id="fp-step1">
+        <h3>Forgot Password?</h3>
+        <p class="fp-sub">Enter your registered college email. We will generate a reset code for you.</p>
+        <div class="fp-alert" id="fp-alert1"></div>
+        <div class="form-group" style="margin-bottom:0.75rem;">
+          <label style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;display:block;margin-bottom:0.4rem;">College Email</label>
+          <input type="email" id="fp-email" placeholder="you@ritchennai.edu.in"
+            style="width:100%;padding:0.72rem 1rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;" />
+        </div>
+        <div class="fp-modal-btns">
+          <button class="fp-btn-cancel" onclick="closeForgot()">Cancel</button>
+          <button class="fp-btn-primary" id="fp-btn1" onclick="requestReset()">Get Reset Code</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Show code + enter new password -->
+      <div class="fp-step" id="fp-step2">
+        <h3>Reset Your Password</h3>
+        <p class="fp-sub">Your reset code is shown below. Enter it along with your new password.</p>
+        <div class="fp-alert" id="fp-alert2"></div>
+
+        <div class="fp-code-box">
+          <div class="fp-code-label">Your Reset Code</div>
+          <div class="fp-code-value" id="fp-code-display">------</div>
+          <div class="fp-code-timer">Valid for 15 minutes</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0.75rem;">
+          <label style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;display:block;margin-bottom:0.4rem;">Enter Code</label>
+          <input type="text" id="fp-code-input" placeholder="6-digit code" maxlength="6"
+            style="width:100%;padding:0.72rem 1rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:1.1rem;font-weight:700;letter-spacing:4px;text-align:center;outline:none;font-family:monospace;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.75rem;">
+          <label style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;display:block;margin-bottom:0.4rem;">New Password</label>
+          <input type="password" id="fp-new-password" placeholder="Min. 6 characters"
+            style="width:100%;padding:0.72rem 1rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.6px;display:block;margin-bottom:0.4rem;">Confirm Password</label>
+          <input type="password" id="fp-confirm-password" placeholder="Re-enter new password"
+            style="width:100%;padding:0.72rem 1rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;" />
+        </div>
+        <div class="fp-modal-btns">
+          <button class="fp-btn-cancel" onclick="closeForgot()">Cancel</button>
+          <button class="fp-btn-primary" id="fp-btn2" onclick="submitReset()">Reset Password</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Success -->
+      <div class="fp-step" id="fp-step3">
+        <div style="text-align:center;padding:1rem 0;">
+          <div style="font-size:3rem;margin-bottom:0.75rem;">&#10003;</div>
+          <h3 style="color:#059669;">Password Reset!</h3>
+          <p class="fp-sub" style="margin-top:0.5rem;">Your password has been updated successfully. You can now sign in with your new password.</p>
+          <button class="fp-btn-primary" onclick="closeForgot()" style="width:100%;margin-top:0.5rem;">Back to Login</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="auth-page">
+
+    <!-- Left panel -->
+    <div class="auth-left">
+      <div class="auth-left-content">
+        <div class="auth-brand">Campus<span>Mart</span></div>
+        <p class="auth-tagline">The trusted student-to-student<br>marketplace for your campus.</p>
+        <div class="auth-features">
+          <div class="auth-feature">
+            <span class="af-icon">&#128218;</span>
+            <span class="af-text">Buy &amp; sell books, notes, calculators and lab materials</span>
+          </div>
+          <div class="auth-feature">
+            <span class="af-icon">&#128172;</span>
+            <span class="af-text">Private in-app chat with sellers - no phone needed</span>
+          </div>
+          <div class="auth-feature">
+            <span class="af-icon">&#128274;</span>
+            <span class="af-text">Verified college emails only - safe &amp; trusted</span>
+          </div>
+          <div class="auth-feature">
+            <span class="af-icon">&#11088;</span>
+            <span class="af-text">Rate items and find the best deals on campus</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="auth-right">
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <h2 id="auth-title">Welcome back</h2>
+          <p id="auth-sub">Sign in to your CampusMart account</p>
+        </div>
+
+        <div class="auth-tabs">
+          <div class="auth-tab active" id="tab-login" onclick="switchTab(''login'')">Login</div>
+          <div class="auth-tab" id="tab-signup" onclick="switchTab(''signup'')">Sign Up</div>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <!-- Login Form -->
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>College Email</label>
+            <input type="email" id="login-email" placeholder="you@ritchennai.edu.in" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Enter your password" required />
+          </div>
+
+          <!-- Forgot Password link -->
+          <a class="forgot-link" onclick="openForgot()">Forgot password?</a>
+
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn" style="padding:0.75rem;font-size:0.95rem;">
+            Sign In
+          </button>
+          <p style="text-align:center;margin-top:1rem;color:var(--text2);font-size:0.85rem;">
+            No account? <a href="#" onclick="switchTab(''signup'')" style="color:var(--p1);font-weight:700;">Create one free</a>
+          </p>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="signup-form" style="display:none;" onsubmit="handleSignup(event)">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="signup-name" placeholder="Your full name" required autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label>College Email</label>
+            <input type="email" id="signup-email" placeholder="you@ritchennai.edu.in" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="signup-password" placeholder="Min. 6 characters" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="signup-btn" style="padding:0.75rem;font-size:0.95rem;">
+            Create Account
+          </button>
+          <p style="text-align:center;margin-top:1rem;color:var(--text2);font-size:0.85rem;">
+            Have an account? <a href="#" onclick="switchTab(''login'')" style="color:var(--p1);font-weight:700;">Sign in</a>
+          </p>
+        </form>
+
+        <p style="text-align:center;margin-top:1.5rem;font-size:0.75rem;color:var(--text3);">
+          &#128274; Only @ritchennai.edu.in and other college emails accepted
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    const API_URL = "http://localhost:3000";
+    let _fpEmail = "";
+
+    function switchTab(tab) {
+      const isLogin = tab === "login";
+      document.getElementById("login-form").style.display  = isLogin ? "block" : "none";
+      document.getElementById("signup-form").style.display = isLogin ? "none"  : "block";
+      document.getElementById("tab-login").classList.toggle("active",  isLogin);
+      document.getElementById("tab-signup").classList.toggle("active", !isLogin);
+      document.getElementById("auth-title").textContent = isLogin ? "Welcome back"    : "Create account";
+      document.getElementById("auth-sub").textContent   = isLogin ? "Sign in to your CampusMart account" : "Join your campus marketplace today";
+      const a = document.getElementById("alert");
+      if (a) a.classList.remove("show");
+    }
+
+    // ── Forgot Password ──────────────────────────────────────────
+    function openForgot() {
+      // Pre-fill email if already typed
+      const emailVal = document.getElementById("login-email").value.trim();
+      if (emailVal) document.getElementById("fp-email").value = emailVal;
+      document.getElementById("fp-overlay").classList.add("open");
+      showFpStep(1);
+    }
+
+    function closeForgot() {
+      document.getElementById("fp-overlay").classList.remove("open");
+      document.getElementById("fp-email").value = "";
+      document.getElementById("fp-code-input").value = "";
+      document.getElementById("fp-new-password").value = "";
+      document.getElementById("fp-confirm-password").value = "";
+      fpAlert(1, "", "");
+      fpAlert(2, "", "");
+      showFpStep(1);
+    }
+
+    function showFpStep(n) {
+      document.querySelectorAll(".fp-step").forEach(s => s.classList.remove("active"));
+      document.getElementById("fp-step" + n).classList.add("active");
+    }
+
+    function fpAlert(step, msg, type) {
+      const el = document.getElementById("fp-alert" + step);
+      if (!msg) { el.className = "fp-alert"; el.textContent = ""; return; }
+      el.className = "fp-alert " + type + " show";
+      el.textContent = msg;
+    }
+
+    async function requestReset() {
+      const email = document.getElementById("fp-email").value.trim().toLowerCase();
+      if (!email) { fpAlert(1, "Please enter your email address.", "error"); return; }
+
+      const btn = document.getElementById("fp-btn1");
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+      fpAlert(1, "", "");
+
+      try {
+        const res  = await fetch(API_URL + "/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          fpAlert(1, data.error || "Something went wrong.", "error");
+        } else if (data.code) {
+          _fpEmail = email;
+          document.getElementById("fp-code-display").textContent = data.code;
+          document.getElementById("fp-code-input").value = data.code; // auto-fill for convenience
+          showFpStep(2);
+        } else {
+          fpAlert(1, "Email not found in our system.", "error");
+        }
+      } catch {
+        fpAlert(1, "Cannot connect to server.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Get Reset Code";
+      }
+    }
+
+    async function submitReset() {
+      const code       = document.getElementById("fp-code-input").value.trim();
+      const newPwd     = document.getElementById("fp-new-password").value;
+      const confirmPwd = document.getElementById("fp-confirm-password").value;
+
+      if (!code)    { fpAlert(2, "Please enter the reset code.", "error"); return; }
+      if (!newPwd)  { fpAlert(2, "Please enter a new password.", "error"); return; }
+      if (newPwd.length < 6) { fpAlert(2, "Password must be at least 6 characters.", "error"); return; }
+      if (newPwd !== confirmPwd) { fpAlert(2, "Passwords do not match.", "error"); return; }
+
+      const btn = document.getElementById("fp-btn2");
+      btn.disabled = true;
+      btn.textContent = "Resetting...";
+      fpAlert(2, "", "");
+
+      try {
+        const res  = await fetch(API_URL + "/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: _fpEmail, code, newPassword: newPwd })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          fpAlert(2, data.error || "Reset failed.", "error");
+        } else {
+          showFpStep(3);
+        }
+      } catch {
+        fpAlert(2, "Cannot connect to server.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Reset Password";
+      }
+    }
+
+    // Close modal on overlay click
+    document.getElementById("fp-overlay").addEventListener("click", function(e) {
+      if (e.target === this) closeForgot();
+    });
+  </script>
+</body>
+</html>

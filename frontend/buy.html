@@ -1,0 +1,464 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+  // Auto-redirect from file:// to localhost:3000
+  if (window.location.protocol === "file:") {
+    var page = window.location.pathname.split("/").pop() || "index.html";
+    window.location.replace("http://localhost:3000/" + page);
+  }
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buy – CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+<style>.nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }</style>
+</head>
+<body>
+
+  <!-- ── FILTER DRAWER OVERLAY ─────────────────────────────────────── -->
+  <div class="filter-overlay" id="filter-overlay" onclick="closeFilterPanel()"></div>
+
+  <!-- ── FILTER DRAWER ─────────────────────────────────────────────── -->
+  <div class="filter-drawer" id="filter-drawer" role="dialog" aria-modal="true" aria-label="Filter items">
+    <div class="fd-header">
+      <span class="fd-title">🎛️ Filters</span>
+      <button class="fd-close" onclick="closeFilterPanel()" aria-label="Close filters">&#x2715;</button>
+    </div>
+
+    <div class="fd-body">
+
+      <!-- Category -->
+      <div class="fd-section">
+        <div class="fd-section-label">Category</div>
+        <div class="fd-cat-grid" id="fd-cat-grid">
+          <button class="fd-cat-btn active" data-cat="all">All</button>
+          <button class="fd-cat-btn" data-cat="Books">📚 Books</button>
+          <button class="fd-cat-btn" data-cat="Notes">📝 Notes</button>
+          <button class="fd-cat-btn" data-cat="Lab Materials">🔬 Lab Materials</button>
+          <button class="fd-cat-btn" data-cat="Electronics">💡 Electronics</button>
+          <button class="fd-cat-btn" data-cat="Project Materials">🛠️ Projects</button>
+          <button class="fd-cat-btn" data-cat="Combo Kits">📦 Combo Kits</button>
+          <button class="fd-cat-btn" data-cat="Shared / Giveaway">🤝 Shared</button>
+          <button class="fd-cat-btn" data-cat="Others">🗂️ Others</button>
+        </div>
+      </div>
+
+      <!-- Deal Type -->
+      <div class="fd-section">
+        <div class="fd-section-label">Deal Type</div>
+        <select id="filter-deal" class="fd-select">
+          <option value="all">All</option>
+          <option value="sell">💰 Sell</option>
+          <option value="exchange">🔄 Exchange</option>
+        </select>
+      </div>
+
+      <!-- Price Range -->
+      <div class="fd-section">
+        <div class="fd-section-label">Price Range (₹)</div>
+        <div class="fd-price-row">
+          <input type="number" id="filter-min" class="fd-input" placeholder="Min" min="0" />
+          <span class="fd-price-sep">—</span>
+          <input type="number" id="filter-max" class="fd-input" placeholder="Max" min="0" />
+        </div>
+      </div>
+
+      <!-- Department -->
+      <div class="fd-section">
+        <div class="fd-section-label">Department / Subject</div>
+        <input type="text" id="filter-dept" class="fd-input fd-input-full" placeholder="e.g. CSE, Physics, Maths" />
+      </div>
+
+    </div><!-- /fd-body -->
+
+    <div class="fd-footer">
+      <button class="fd-btn-clear" onclick="clearFilters()">✕ Clear All</button>
+      <button class="fd-btn-apply" onclick="applyAndClose()">✔ Apply Filters</button>
+    </div>
+  </div>
+
+  <!-- ── NAVBAR ─────────────────────────────────────────────────────── -->
+  <nav class="navbar">
+    <div class="logo">Campus<span>Mart</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html">&#127968; <span>Home</span></a>
+      <a href="sell.html">&#129689; <span>Sell</span></a>
+      <a href="buy.html" class="active">&#128722; <span>Buy</span></a>
+      <a href="chat.html">&#128172; <span>Chat</span></a>
+    </div>
+    <div class="nav-user">
+      <a href="settings.html" title="Profile" style="text-decoration:none;"><div class="avatar" id="avatar-initials">?</div></a>
+      <span class="nav-username" id="nav-username">Student</span>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- ── PAGE ───────────────────────────────────────────────────────── -->
+  <div class="page-container">
+
+    <div class="buy-page-header">
+      <div>
+        <h2>🛒 Browse Items</h2>
+        <p>Find academic items listed by students on your campus.</p>
+      </div>
+      <div class="sort-wrap">
+        <select id="sort-select" onchange="filterItems()" class="sort-select">
+          <option value="newest">Newest First</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Search + Filter button row -->
+    <div class="search-filter-row">
+      <input type="text" class="search-input-full" id="search-input"
+             placeholder="🔍 Search by name, description, subject..."
+             oninput="filterItems()" />
+      <button class="btn-filter-open" id="btn-filter-open" onclick="openFilterPanel()" aria-label="Open filters">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6"  x2="20" y2="6"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+          <line x1="11" y1="18" x2="13" y2="18"/>
+        </svg>
+        Filters
+        <span class="filter-badge" id="filter-badge" style="display:none;">0</span>
+      </button>
+    </div>
+
+    <!-- Active filter chips (shown when filters are applied) -->
+    <div class="active-chips" id="active-chips"></div>
+
+    <div id="results-count" class="results-count"></div>
+
+    <div class="items-grid" id="items-grid">
+      <div class="empty-state" style="grid-column:1/-1;">
+        <div class="empty-icon">⏳</div>
+        <h3>Loading items...</h3>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    requireAuth();
+    const user = getUser();
+    document.getElementById('nav-username').textContent = user.name;
+    document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
+
+    let allItems      = [];
+    let activeCategory = 'all';
+
+    // ── Drawer open / close ──────────────────────────────────────────
+    function openFilterPanel() {
+      document.getElementById('filter-drawer').classList.add('open');
+      document.getElementById('filter-overlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeFilterPanel() {
+      document.getElementById('filter-drawer').classList.remove('open');
+      document.getElementById('filter-overlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    function applyAndClose() {
+      filterItems();
+      closeFilterPanel();
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeFilterPanel();
+    });
+
+    // ── Category buttons inside drawer ───────────────────────────────
+    document.querySelectorAll('.fd-cat-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.fd-cat-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        activeCategory = btn.dataset.cat;
+      });
+    });
+
+    // ── Load items ───────────────────────────────────────────────────
+    async function loadItems() {
+      try {
+        const res  = await fetch(API + '/items');
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        allItems   = data.items || [];
+        filterItems();
+      } catch (err) {
+        document.getElementById('items-grid').innerHTML =
+          '<div class="empty-state" style="grid-column:1/-1;">'
+          + '<div class="empty-icon">⚠️</div>'
+          + '<h3>Could not load items</h3>'
+          + '<p>Make sure the server is running at <b>http://localhost:3000</b></p>'
+          + '</div>';
+      }
+    }
+
+    // ── Clear all filters ────────────────────────────────────────────
+    function clearFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('filter-dept').value  = '';
+      document.getElementById('filter-min').value   = '';
+      document.getElementById('filter-max').value   = '';
+      document.getElementById('filter-deal').value  = 'all';
+      document.getElementById('sort-select').value  = 'newest';
+      activeCategory = 'all';
+      document.querySelectorAll('.fd-cat-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelector('.fd-cat-btn[data-cat="all"]').classList.add('active');
+      filterItems();
+    }
+
+    // ── Count active filters for badge ───────────────────────────────
+    function countActiveFilters() {
+      var n = 0;
+      if (activeCategory !== 'all') n++;
+      if (document.getElementById('filter-deal').value !== 'all') n++;
+      if (document.getElementById('filter-min').value)  n++;
+      if (document.getElementById('filter-max').value)  n++;
+      if (document.getElementById('filter-dept').value.trim()) n++;
+      return n;
+    }
+
+    // ── Render active filter chips ────────────────────────────────────
+    function renderChips() {
+      var chips = [];
+      if (activeCategory !== 'all')
+        chips.push({ label: 'Category: ' + activeCategory, clear: function() {
+          activeCategory = 'all';
+          document.querySelectorAll('.fd-cat-btn').forEach(function(b){b.classList.remove('active');});
+          document.querySelector('.fd-cat-btn[data-cat="all"]').classList.add('active');
+          filterItems();
+        }});
+      var deal = document.getElementById('filter-deal').value;
+      if (deal !== 'all')
+        chips.push({ label: 'Deal: ' + deal, clear: function() {
+          document.getElementById('filter-deal').value = 'all'; filterItems();
+        }});
+      var minP = document.getElementById('filter-min').value;
+      var maxP = document.getElementById('filter-max').value;
+      if (minP || maxP)
+        chips.push({ label: '₹' + (minP||'0') + ' – ' + (maxP||'∞'), clear: function() {
+          document.getElementById('filter-min').value = '';
+          document.getElementById('filter-max').value = '';
+          filterItems();
+        }});
+      var dept = document.getElementById('filter-dept').value.trim();
+      if (dept)
+        chips.push({ label: 'Dept: ' + dept, clear: function() {
+          document.getElementById('filter-dept').value = ''; filterItems();
+        }});
+
+      var container = document.getElementById('active-chips');
+      if (!chips.length) { container.innerHTML = ''; return; }
+      container.innerHTML = chips.map(function(c, i) {
+        return '<span class="active-chip" data-idx="' + i + '">' + c.label
+          + ' <button class="chip-remove" data-idx="' + i + '">&#x2715;</button></span>';
+      }).join('');
+
+      // Attach clear handlers
+      container.querySelectorAll('.chip-remove').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          chips[parseInt(btn.dataset.idx)].clear();
+        });
+      });
+    }
+
+    // ── Main filter function ─────────────────────────────────────────
+    function filterItems() {
+      const search = document.getElementById('search-input').value.toLowerCase().trim();
+      const dept   = document.getElementById('filter-dept').value.toLowerCase().trim();
+      const minP   = parseFloat(document.getElementById('filter-min').value) || 0;
+      const maxP   = parseFloat(document.getElementById('filter-max').value) || Infinity;
+      const deal   = document.getElementById('filter-deal').value;
+      const sort   = document.getElementById('sort-select').value;
+
+      let filtered = allItems.slice();
+
+      if (activeCategory !== 'all')
+        filtered = filtered.filter(function (i) { return i.category === activeCategory; });
+
+      if (search)
+        filtered = filtered.filter(function (i) {
+          return i.name.toLowerCase().includes(search)
+              || (i.description || '').toLowerCase().includes(search)
+              || (i.subject || '').toLowerCase().includes(search);
+        });
+
+      if (dept)
+        filtered = filtered.filter(function (i) {
+          return (i.subject || '').toLowerCase().includes(dept);
+        });
+
+      if (minP > 0 || maxP < Infinity)
+        filtered = filtered.filter(function (i) {
+          if (i.deal_type === 'exchange') return true;
+          return i.price >= minP && i.price <= maxP;
+        });
+
+      if (deal !== 'all')
+        filtered = filtered.filter(function (i) {
+          return (i.deal_type || 'sell') === deal;
+        });
+
+      if (sort === 'price-asc')  filtered.sort(function (a, b) { return (a.price||0) - (b.price||0); });
+      if (sort === 'price-desc') filtered.sort(function (a, b) { return (b.price||0) - (a.price||0); });
+
+      // Update badge
+      var n = countActiveFilters();
+      var badge = document.getElementById('filter-badge');
+      if (n > 0) { badge.textContent = n; badge.style.display = 'inline-flex'; }
+      else        { badge.style.display = 'none'; }
+
+      // Update button label
+      var btnLabel = document.getElementById('btn-filter-open');
+      btnLabel.classList.toggle('has-filters', n > 0);
+
+      renderChips();
+
+      document.getElementById('results-count').textContent =
+        filtered.length + ' item' + (filtered.length !== 1 ? 's' : '') + ' found';
+
+      renderItems(filtered);
+    }
+
+    // ── Toast ────────────────────────────────────────────────────────
+    function showToast(msg, type) {
+      type = type || 'success';
+      let t = document.getElementById('toast');
+      if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+      t.textContent = msg;
+      t.className = 'toast toast-' + type + ' show';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(function () { t.classList.remove('show'); }, 2800);
+    }
+
+    function switchMainImg(itemId, src) {
+      var main = document.getElementById('main-img-' + itemId);
+      if (main) main.src = src;
+    }
+
+    // ── Render items ─────────────────────────────────────────────────
+    function renderItems(items) {
+      const grid = document.getElementById('items-grid');
+      if (!items.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">'
+          + '<div class="empty-icon">🔍</div>'
+          + '<h3>No items found</h3><p>Try adjusting your search or filters.</p></div>';
+        return;
+      }
+
+      const catIcons = {
+        'Books':'📚','Notes':'📝','Lab Materials':'🔬',
+        'Electronics':'💡','Project Materials':'🛠️',
+        'Combo Kits':'📦','Shared / Giveaway':'🤝','Others':'🗂️'
+      };
+      const condMap = { New:'condition-new', Good:'condition-good', Used:'condition-used' };
+
+      grid.innerHTML = items.map(function (item) {
+        const isSold     = item.sold;
+        const isOwn      = user.id && item.user_id && item.user_id.toString() === user.id.toString();
+        const icon       = catIcons[item.category] || '📦';
+        const isExchange = (item.deal_type === 'exchange');
+
+        var imgs = [];
+        if (Array.isArray(item.images) && item.images.length) imgs = item.images;
+        else if (item.image) imgs = [item.image];
+
+        var mainImgHtml = imgs.length
+          ? '<img id="main-img-' + item._id + '" src="' + API + '/uploads/' + imgs[0] + '" alt="' + esc(item.name) + '" class="card-img"'
+            + " onerror=\"this.style.display='none';this.nextElementSibling.style.display='flex'\" />"
+            + '<div class="card-img-fallback" style="display:none">' + icon + '</div>'
+          : '<div class="card-img-fallback">' + icon + '</div>';
+
+        var thumbsHtml = '';
+        if (imgs.length > 1) {
+          thumbsHtml = '<div class="card-thumbs">'
+            + imgs.map(function (img) {
+                return '<img src="' + API + '/uploads/' + img + '" class="card-thumb"'
+                  + ' onclick="switchMainImg(\'' + item._id + '\',\'' + API + '/uploads/' + img + '\')"'
+                  + ' onerror="this.style.display=\'none\'" />';
+              }).join('')
+            + '</div>';
+        }
+
+        var priceBadge = isExchange
+          ? '<span class="mc-exchange-badge">🔄 ' + esc(item.exchange_for || 'Exchange') + '</span>'
+          : '<span class="mc-price">₹' + Number(item.price).toLocaleString() + '</span>';
+
+        var dealChip = isExchange
+          ? '<span class="mc-deal-chip exchange-chip">🔄 Exchange</span>' : '';
+
+        let actions = '';
+        if (isSold) {
+          actions = '<button class="btn-sold" disabled>✅ Sold</button>';
+        } else if (isOwn) {
+          actions = '<div class="own-listing-badge">📌 Your Listing</div>'
+            + '<button class="btn-mark-sold" onclick="markSold(\'' + item._id + '\',this)">Mark as Sold</button>';
+        } else {
+          const chatUrl = 'chat.html?itemId=' + item._id
+            + '&otherEmail=' + encodeURIComponent(item.sellerEmail || '')
+            + '&itemName='   + encodeURIComponent(item.name);
+          actions = '<a href="' + chatUrl + '" class="btn-contact btn-chat-seller">💬 Message Seller</a>';
+        }
+
+        return '<div class="mc-card ' + (isSold ? 'mc-sold' : '') + '" id="card-' + item._id + '">'
+          + '<div class="mc-img-wrap">'
+            + mainImgHtml
+            + '<span class="mc-category-badge">' + esc(item.category) + '</span>'
+            + dealChip
+            + (isSold ? '<div class="sold-overlay">SOLD</div>' : '')
+            + '<span class="mc-condition ' + (condMap[item.condition] || '') + '">' + esc(item.condition) + '</span>'
+          + '</div>'
+          + thumbsHtml
+          + '<div class="mc-body">'
+            + '<div class="mc-name">' + esc(item.name) + '</div>'
+            + '<div class="mc-subject">📖 ' + esc(item.subject) + '</div>'
+            + (item.description ? '<p class="mc-desc">' + esc(item.description.substring(0,80)) + (item.description.length>80?'…':'') + '</p>' : '')
+            + '<div class="mc-footer">' + priceBadge + '</div>'
+            + '<div class="item-actions">' + actions + '</div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    async function markSold(itemId, btn) {
+      if (!confirm('Mark this item as SOLD?')) return;
+      btn.disabled = true; btn.textContent = 'Updating...';
+      try {
+        const res  = await fetch(API + '/items/' + itemId + '/sold', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user.id })
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error); btn.disabled=false; btn.textContent='Mark as Sold'; return; }
+        const card = document.getElementById('card-' + itemId);
+        if (card) {
+          const wrap = card.querySelector('.mc-img-wrap');
+          if (wrap && !wrap.querySelector('.sold-overlay')) {
+            const ov = document.createElement('div');
+            ov.className='sold-overlay'; ov.textContent='SOLD'; wrap.appendChild(ov);
+          }
+          card.classList.add('mc-sold');
+          card.querySelector('.item-actions').innerHTML = '<button class="btn-sold" disabled>✅ Sold</button>';
+        }
+        const idx = allItems.findIndex(function(i){ return i._id===itemId; });
+        if (idx !== -1) allItems[idx].sold = true;
+      } catch(e) { alert('Network error.'); btn.disabled=false; btn.textContent='Mark as Sold'; }
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    loadItems();
+  </script>
+</body>
+</html>

@@ -1,0 +1,811 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile - CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    if (window.location.protocol === "file:") {
+      var page = window.location.pathname.split("/").pop() || "settings.html";
+      window.location.replace("http://localhost:3000/" + page);
+    }
+  </script>
+  <style>
+    /* ── Page wrapper ── */
+    .profile-page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── Profile Header Card ── */
+    .profile-header-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 0;
+    }
+
+    .profile-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .profile-avatar-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--p1) 0%, var(--pink) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 2rem;
+      font-weight: 900;
+      box-shadow: 0 6px 20px rgba(124,58,237,0.35);
+      letter-spacing: -1px;
+    }
+
+    .profile-online-dot {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 14px;
+      height: 14px;
+      background: #10b981;
+      border-radius: 50%;
+      border: 2.5px solid #fff;
+    }
+
+    .profile-header-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .profile-header-info h2 {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.3px;
+      margin-bottom: 0.2rem;
+    }
+
+    .profile-header-info .profile-email {
+      font-size: 0.88rem;
+      color: var(--text2);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .profile-header-info .profile-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .profile-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.22rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--bg2);
+      color: var(--p1);
+      border: 1px solid var(--border2);
+    }
+
+    .profile-chip.verified {
+      background: rgba(16,185,129,0.1);
+      color: #059669;
+      border-color: rgba(16,185,129,0.3);
+    }
+
+    .profile-header-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Tab Bar ── */
+    .profile-tabs {
+      display: flex;
+      gap: 0;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 1.75rem;
+    }
+
+    .profile-tab {
+      flex: 1;
+      padding: 0.85rem 1rem;
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text2);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 3px solid transparent;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      font-family: inherit;
+    }
+
+    .profile-tab:hover {
+      color: var(--p1);
+      background: var(--bg);
+    }
+
+    .profile-tab.active {
+      color: var(--p1);
+      border-bottom-color: var(--p1);
+      background: var(--bg2);
+    }
+
+    /* ── Tab Panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Section Card ── */
+    .section-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.25rem;
+    }
+
+    .section-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .si-purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+    .si-pink   { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
+    .si-green  { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+    .si-blue   { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+
+    .section-card-title h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.1rem;
+    }
+
+    .section-card-title p {
+      font-size: 0.8rem;
+      color: var(--text2);
+    }
+
+    /* ── Info Row ── */
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      gap: 1rem;
+    }
+
+    .info-row:last-child { border-bottom: none; }
+
+    .info-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+
+    .info-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: right;
+    }
+
+    /* ── Stats Grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .stat-tile {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      text-align: center;
+    }
+
+    .stat-tile .st-num {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--p1);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-tile .st-label {
+      font-size: 0.78rem;
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    /* ── Form elements ── */
+    .input-with-eye { position: relative; }
+    .input-with-eye input { padding-right: 2.8rem; }
+
+    .eye-btn {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text3);
+      padding: 0.2rem;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+    .eye-btn:hover { color: var(--p1); }
+
+    .password-strength {
+      margin-top: 0.4rem;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .strength-bar {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s, background 0.3s;
+      width: 0%;
+    }
+    .strength-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-top: 0.3rem;
+    }
+
+    .current-info {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.85rem;
+      color: var(--text2);
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .current-info strong { color: var(--text); }
+
+    .form-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.1rem 0;
+    }
+
+    /* ── Danger zone ── */
+    .danger-zone {
+      border-color: rgba(239,68,68,0.3);
+    }
+    .danger-zone .section-card-title {
+      border-bottom-color: rgba(239,68,68,0.15);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .profile-header-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+      }
+      .profile-header-info .profile-email { justify-content: center; }
+      .profile-header-info .profile-badges { justify-content: center; }
+      .profile-header-actions { align-items: center; flex-direction: row; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .profile-tabs { overflow-x: auto; }
+      .profile-tab { white-space: nowrap; font-size: 0.82rem; padding: 0.75rem 0.85rem; }
+      .profile-page { padding: 1rem 1rem 3rem; }
+      .section-card { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">Campus<span>Mart</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html">&#127968; <span>Home</span></a>
+      <a href="sell.html">&#129689; <span>Sell</span></a>
+      <a href="buy.html">&#128722; <span>Buy</span></a>
+      <a href="chat.html">&#128172; <span>Chat</span></a>
+    </div>
+    <div class="nav-user">
+      <div class="avatar" id="avatar-initials">?</div>
+      <span class="nav-username" id="nav-username">Student</span>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="profile-page">
+
+    <!-- ── Profile Header Card ── -->
+    <div class="profile-header-card">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar-circle" id="profile-avatar-circle">S</div>
+        <div class="profile-online-dot"></div>
+      </div>
+
+      <div class="profile-header-info">
+        <h2 id="profile-name">Loading...</h2>
+        <div class="profile-email">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+          <span id="profile-email-display">Loading...</span>
+        </div>
+        <div class="profile-badges">
+          <span class="profile-chip verified">&#10003; Verified Student</span>
+          <span class="profile-chip" id="profile-member-chip">Member</span>
+        </div>
+      </div>
+
+      <div class="profile-header-actions">
+        <button class="btn btn-secondary" onclick="switchTab('settings')" style="font-size:0.82rem;padding:0.42rem 1rem;">
+          Edit Profile
+        </button>
+        <button class="btn btn-danger" onclick="logout()" style="font-size:0.82rem;">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Tab Bar ── -->
+    <div class="profile-tabs">
+      <button class="profile-tab active" id="tab-profile" onclick="switchTab('profile')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
+      <button class="profile-tab" id="tab-activity" onclick="switchTab('activity')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Activity
+      </button>
+      <button class="profile-tab" id="tab-settings" onclick="switchTab('settings')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: PROFILE                                   -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="tab-panel active" id="panel-profile">
+
+      <!-- Account Info -->
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-purple">&#128100;</div>
+          <div>
+            <h3>Account Information</h3>
+            <p>Your registered details</p>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Full Name</span>
+          <span class="info-value" id="info-name">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value" id="info-email">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Account Type</span>
+          <span class="info-value">Student Seller</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-value" style="color:#059669;font-weight:700;">&#10003; Active</span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-blue">&#128202;</div>
+          <div>
+            <h3>My Stats</h3>
+            <p>Your marketplace activity</p>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-tile">
+            <div class="st-num" id="stat-total">-</div>
+            <div class="st-label">Total Listed</div>
+          </div>
+          <div class="stat-tile">
+            <div class="st-num" id="stat-approved">-</div>
+            <div class="st-label">Approved</div>
+          </div>
+          <div class="stat-tile">
+            <div class="st-num" id="stat-pending">-</div>
+            <div class="st-label">Pending Review</div>
+          </div>
+          <div class="stat-tile">
+            <div class="st-num" id="stat-sold">-</div>
+            <div class="st-label">Sold</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: ACTIVITY                                  -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="tab-panel" id="panel-activity">
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-green">&#128203;</div>
+          <div>
+            <h3>My Listings</h3>
+            <p>All items you have submitted</p>
+          </div>
+        </div>
+        <div id="activity-listings">
+          <div style="text-align:center;padding:2rem;color:var(--text3);">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: SETTINGS                                  -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="tab-panel" id="panel-settings">
+
+      <!-- Change Email -->
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-purple">&#9993;</div>
+          <div>
+            <h3>Change Email</h3>
+            <p>Update your college email address</p>
+          </div>
+        </div>
+
+        <div id="email-alert" class="alert"></div>
+
+        <div class="current-info">
+          Current: <strong id="current-email-display">-</strong>
+        </div>
+
+        <form id="email-form" onsubmit="handleEmailChange(event)">
+          <div class="form-group">
+            <label>New Email Address</label>
+            <input type="email" id="new-email" placeholder="you@ritchennai.edu.in" required autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Current Password</label>
+            <div class="input-with-eye">
+              <input type="password" id="email-current-password" placeholder="Confirm with your password" required />
+              <button type="button" class="eye-btn" onclick="toggleEye('email-current-password',this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="email-btn" style="padding:0.72rem;">
+            Update Email
+          </button>
+        </form>
+      </div>
+
+      <!-- Change Password -->
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-pink">&#128274;</div>
+          <div>
+            <h3>Change Password</h3>
+            <p>Keep your account secure with a strong password</p>
+          </div>
+        </div>
+
+        <div id="password-alert" class="alert"></div>
+
+        <form id="password-form" onsubmit="handlePasswordChange(event)">
+          <div class="form-group">
+            <label>Current Password</label>
+            <div class="input-with-eye">
+              <input type="password" id="current-password" placeholder="Enter current password" required />
+              <button type="button" class="eye-btn" onclick="toggleEye('current-password',this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-divider"></div>
+
+          <div class="form-group">
+            <label>New Password</label>
+            <div class="input-with-eye">
+              <input type="password" id="new-password" placeholder="Min. 6 characters" required oninput="checkStrength(this.value)" />
+              <button type="button" class="eye-btn" onclick="toggleEye('new-password',this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="password-strength" id="strength-wrap" style="display:none;">
+              <div class="strength-bar" id="strength-bar"></div>
+            </div>
+            <div class="strength-label" id="strength-label"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <div class="input-with-eye">
+              <input type="password" id="confirm-password" placeholder="Re-enter new password" required />
+              <button type="button" class="eye-btn" onclick="toggleEye('confirm-password',this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="password-btn" style="padding:0.72rem;">
+            Update Password
+          </button>
+        </form>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="section-card danger-zone">
+        <div class="section-card-title">
+          <div class="section-icon" style="background:rgba(239,68,68,0.1);">&#9888;</div>
+          <div>
+            <h3 style="color:var(--red);">Danger Zone</h3>
+            <p>Irreversible account actions</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:0.2rem;">Sign out of all devices</div>
+            <div style="font-size:0.82rem;color:var(--text2);">Logs you out and clears your session</div>
+          </div>
+          <button class="btn btn-danger" onclick="logout()" style="white-space:nowrap;">
+            Logout Now
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    requireAuth();
+    const user = getUser();
+
+    // ── Init ──────────────────────────────────────────────────────
+    document.getElementById("nav-username").textContent         = user.name;
+    document.getElementById("avatar-initials").textContent      = user.name.charAt(0).toUpperCase();
+    document.getElementById("profile-avatar-circle").textContent = user.name.charAt(0).toUpperCase();
+    document.getElementById("profile-name").textContent         = user.name;
+    document.getElementById("profile-email-display").textContent = user.email;
+    document.getElementById("current-email-display").textContent = user.email;
+    document.getElementById("info-name").textContent            = user.name;
+    document.getElementById("info-email").textContent           = user.email;
+
+    // Member since chip
+    const joined = new Date().toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+    document.getElementById("profile-member-chip").textContent  = "Joined " + joined;
+
+    // ── Tab switching ─────────────────────────────────────────────
+    function switchTab(name) {
+      document.querySelectorAll(".profile-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.getElementById("tab-" + name).classList.add("active");
+      document.getElementById("panel-" + name).classList.add("active");
+      if (name === "activity") loadActivityListings();
+      if (name === "profile")  loadStats();
+    }
+
+    // ── Load stats ────────────────────────────────────────────────
+    async function loadStats() {
+      try {
+        const url = API + "/my-items?user_id=" + user.id + "&t=" + Date.now();
+        const res  = await fetch(url, { headers: userAuthHeaders() });
+        const data = await res.json();
+        if (!data.success) return;
+        const items = data.items;
+        document.getElementById("stat-total").textContent    = items.length;
+        document.getElementById("stat-approved").textContent = items.filter(i => i.status === "Approved").length;
+        document.getElementById("stat-pending").textContent  = items.filter(i => i.status === "Pending" || i.status === "Needs Correction").length;
+        document.getElementById("stat-sold").textContent     = items.filter(i => i.sold).length;
+      } catch(e) {}
+    }
+
+    // ── Load activity listings ────────────────────────────────────
+    async function loadActivityListings() {
+      const container = document.getElementById("activity-listings");
+      container.innerHTML = "<div style=\"text-align:center;padding:2rem;color:var(--text3);\">Loading...</div>";
+      try {
+        const url = API + "/my-items?user_id=" + user.id + "&t=" + Date.now();
+        const res  = await fetch(url, { headers: userAuthHeaders() });
+        const data = await res.json();
+        if (!data.success || !data.items.length) {
+          container.innerHTML = "<div style=\"text-align:center;padding:2rem;color:var(--text3);\">No listings yet. <a href=\"sell.html\" style=\"color:var(--p1);font-weight:700;\">List your first item</a></div>";
+          return;
+        }
+        const statusClass = { Pending:"s-pending", Approved:"s-approved", Rejected:"s-rejected", "Needs Correction":"s-correction" };
+        container.innerHTML = data.items.map(item => {
+          const status = item.status || "Pending";
+          const sc = statusClass[status] || "s-pending";
+          const price = item.deal_type === "exchange" ? "Exchange" : "Rs." + Number(item.price).toLocaleString();
+          return "<div style=\"display:flex;align-items:center;gap:0.85rem;padding:0.75rem 0;border-bottom:1px solid var(--border);\">"
+            + "<div style=\"width:44px;height:44px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;overflow:hidden;\">"
+            + (item.image ? "<img src=\"" + API + "/uploads/" + item.image + "\" style=\"width:100%;height:100%;object-fit:cover;border-radius:8px;\" onerror=\"this.style.display='none'\" />" : "&#128230;")
+            + "</div>"
+            + "<div style=\"flex:1;min-width:0;\">"
+            + "<div style=\"font-weight:700;font-size:0.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">" + e(item.name) + "</div>"
+            + "<div style=\"font-size:0.78rem;color:var(--text2);margin-top:0.1rem;\">" + e(item.category) + " &middot; " + price + "</div>"
+            + "</div>"
+            + "<span class=\"status-badge " + sc + "\" style=\"display:inline-flex;align-items:center;padding:0.2rem 0.65rem;border-radius:20px;font-size:0.7rem;font-weight:800;text-transform:uppercase;white-space:nowrap;\">" + status + "</span>"
+            + "</div>";
+        }).join("") + "<style>.s-pending{background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.35)}.s-approved{background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.35)}.s-rejected{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.35)}.s-correction{background:rgba(59,130,246,0.12);color:#2563eb;border:1px solid rgba(59,130,246,0.35)}</style>";
+      } catch(e) {
+        container.innerHTML = "<div style=\"text-align:center;padding:2rem;color:var(--red);\">Could not load listings.</div>";
+      }
+    }
+
+    function e(str) { const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML; }
+
+    // ── Toggle password visibility ────────────────────────────────
+    function toggleEye(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isText = input.type === "text";
+      input.type = isText ? "password" : "text";
+      btn.style.color = isText ? "" : "var(--p1)";
+    }
+
+    // ── Password strength ─────────────────────────────────────────
+    function checkStrength(val) {
+      const wrap  = document.getElementById("strength-wrap");
+      const bar   = document.getElementById("strength-bar");
+      const label = document.getElementById("strength-label");
+      if (!val) { wrap.style.display = "none"; label.textContent = ""; return; }
+      wrap.style.display = "block";
+      let score = 0;
+      if (val.length >= 6)  score++;
+      if (val.length >= 10) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const levels = [
+        { pct:"20%", color:"#ef4444", text:"Very weak" },
+        { pct:"40%", color:"#f97316", text:"Weak" },
+        { pct:"60%", color:"#f59e0b", text:"Fair" },
+        { pct:"80%", color:"#10b981", text:"Strong" },
+        { pct:"100%", color:"#059669", text:"Very strong" }
+      ];
+      const lvl = levels[Math.min(score - 1, 4)] || levels[0];
+      bar.style.width = lvl.pct;
+      bar.style.background = lvl.color;
+      label.textContent = lvl.text;
+      label.style.color = lvl.color;
+    }
+
+    // ── Alert helper ──────────────────────────────────────────────
+    function setAlert(id, msg, type) {
+      const el = document.getElementById(id);
+      el.className = "alert alert-" + type + " show";
+      el.textContent = msg;
+      if (type === "success") setTimeout(() => el.classList.remove("show"), 4000);
+    }
+
+    // ── Change Email ──────────────────────────────────────────────
+    async function handleEmailChange(ev) {
+      ev.preventDefault();
+      const btn      = document.getElementById("email-btn");
+      const newEmail = document.getElementById("new-email").value.trim().toLowerCase();
+      const password = document.getElementById("email-current-password").value;
+      if (newEmail === user.email) { setAlert("email-alert", "New email is the same as current.", "error"); return; }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) { setAlert("email-alert", "Please enter a valid email address.", "error"); return; }
+      btn.disabled = true;
+      btn.innerHTML = "<span class=\"spinner\"></span> Updating...";
+      try {
+        const res  = await fetch(API + "/settings/change-email", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...userAuthHeaders() },
+          body: JSON.stringify({ newEmail, currentPassword: password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setAlert("email-alert", data.error || "Failed to update email.", "error");
+        } else {
+          const updated = { ...user, email: data.email, token: data.token };
+          localStorage.setItem("campusmart_user", JSON.stringify(updated));
+          setAlert("email-alert", "Email updated successfully!", "success");
+          document.getElementById("profile-email-display").textContent = data.email;
+          document.getElementById("current-email-display").textContent = data.email;
+          document.getElementById("info-email").textContent = data.email;
+          document.getElementById("email-form").reset();
+        }
+      } catch { setAlert("email-alert", "Cannot connect to server.", "error"); }
+      finally { btn.disabled = false; btn.textContent = "Update Email"; }
+    }
+
+    // ── Change Password ───────────────────────────────────────────
+    async function handlePasswordChange(ev) {
+      ev.preventDefault();
+      const btn        = document.getElementById("password-btn");
+      const currentPwd = document.getElementById("current-password").value;
+      const newPwd     = document.getElementById("new-password").value;
+      const confirmPwd = document.getElementById("confirm-password").value;
+      if (newPwd.length < 6) { setAlert("password-alert", "New password must be at least 6 characters.", "error"); return; }
+      if (newPwd !== confirmPwd) { setAlert("password-alert", "Passwords do not match.", "error"); return; }
+      if (currentPwd === newPwd) { setAlert("password-alert", "New password must differ from current.", "error"); return; }
+      btn.disabled = true;
+      btn.innerHTML = "<span class=\"spinner\"></span> Updating...";
+      try {
+        const res  = await fetch(API + "/settings/change-password", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...userAuthHeaders() },
+          body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setAlert("password-alert", data.error || "Failed to update password.", "error");
+        } else {
+          setAlert("password-alert", "Password updated! Logging you out...", "success");
+          document.getElementById("password-form").reset();
+          document.getElementById("strength-wrap").style.display = "none";
+          document.getElementById("strength-label").textContent  = "";
+          setTimeout(() => logout(), 2500);
+        }
+      } catch { setAlert("password-alert", "Cannot connect to server.", "error"); }
+      finally { btn.disabled = false; btn.textContent = "Update Password"; }
+    }
+
+    // Load stats on init
+    loadStats();
+  </script>
+</body>
+</html>

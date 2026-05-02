@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+  // Auto-redirect from file:// to localhost:3000
+  if (window.location.protocol === "file:") {
+    var page = window.location.pathname.split("/").pop() || "index.html";
+    window.location.replace("http://localhost:3000/" + page);
+  }
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sell - CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+<style>.nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }</style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Campus<span>Mart</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html">&#127968; <span>Home</span></a>
+      <a href="sell.html" class="active">&#129689; <span>Sell</span></a>
+      <a href="buy.html">&#128722; <span>Buy</span></a>
+      <a href="chat.html">&#128172; <span>Chat</span></a>
+    </div>
+    <div class="nav-user">
+      <a href="settings.html" title="Profile" style="text-decoration:none;"><div class="avatar" id="avatar-initials">?</div></a>
+      <span class="nav-username" id="nav-username">Student</span>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <div class="page-header">
+      <h2>List an Item</h2>
+      <p>Fill in the details below to list your item for fellow students.</p>
+    </div>
+
+    <div class="sell-card">
+      <div id="sell-alert" class="alert"></div>
+
+      <form id="sell-form" onsubmit="handleSell(event)" enctype="multipart/form-data">
+
+        <!-- Row 1: Name + Category -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Item Name *</label>
+            <input type="text" id="item-name" placeholder="e.g. Engineering Physics Book" required />
+          </div>
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="item-category" required>
+              <option value="" disabled selected>-- Select a Category --</option>
+              <option value="Books">Books</option>
+              <option value="Notes">Notes</option>
+              <option value="Lab Materials">Lab Materials</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Project Materials">Project Materials</option>
+              <option value="Combo Kits">Combo Kits</option>
+              <option value="Shared / Giveaway">Shared / Giveaway</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 2: Subject + Condition -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Subject / Department *</label>
+            <input type="text" id="item-subject" placeholder="e.g. Physics, CSE, Maths" required />
+          </div>
+          <div class="form-group">
+            <label>Condition *</label>
+            <select id="item-condition" required>
+              <option value="">Select condition</option>
+              <option value="New">New</option>
+              <option value="Good">Good</option>
+              <option value="Used">Used</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Deal Type -->
+        <div class="form-group">
+          <label>Deal Type *</label>
+          <div class="deal-type-toggle">
+            <label class="deal-option">
+              <input type="radio" name="deal_type" value="sell" id="deal-sell" checked onchange="onDealTypeChange()" />
+              <span class="deal-label">Sell</span>
+            </label>
+            <label class="deal-option">
+              <input type="radio" name="deal_type" value="exchange" id="deal-exchange" onchange="onDealTypeChange()" />
+              <span class="deal-label">Exchange</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Price (shown for sell) -->
+        <div class="form-group" id="price-group">
+          <label>Price (Rs.) *</label>
+          <input type="number" id="item-price" placeholder="e.g. 150" min="0" />
+        </div>
+
+        <!-- Exchange for (shown for exchange) -->
+        <div class="form-group" id="exchange-group" style="display:none;">
+          <label>Exchange For *</label>
+          <input type="text" id="item-exchange-for" placeholder="e.g. Physics Book, Scientific Calculator" />
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="item-description" placeholder="Describe the item, edition, any damage, etc."></textarea>
+        </div>
+
+        <!-- MULTIPLE IMAGE UPLOAD (up to 7) -->
+        <div class="form-group">
+          <label>Item Images</label>
+
+          <input type="file" id="input-camera"  accept="image/jpeg,image/jpg,image/png" capture="environment" style="display:none" onchange="handleMultiImageSelect(event)" />
+          <input type="file" id="input-gallery" accept="image/jpeg,image/jpg,image/png" multiple style="display:none" onchange="handleMultiImageSelect(event)" />
+
+          <div class="img-dropzone" id="img-dropzone"
+               ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            <div class="idz-inner">
+              <div class="idz-icon" style="font-size:2rem;">&#128247;</div>
+              <p class="idz-title">Drag &amp; drop images here</p>
+              <p class="idz-sub">or choose an option below</p>
+              <div class="idz-btns">
+                <button type="button" class="idz-btn" onclick="document.getElementById('input-camera').click()">
+                  Camera
+                </button>
+                <button type="button" class="idz-btn" onclick="document.getElementById('input-gallery').click()">
+                  Gallery
+                </button>
+              </div>
+              <p class="idz-hint">JPG / PNG &middot; max 5 MB each &middot; up to 7 images</p>
+            </div>
+          </div>
+
+          <div class="img-progress-wrap" id="img-progress-wrap" style="display:none;">
+            <div class="img-progress-bar" id="img-progress-bar"></div>
+            <span class="img-progress-label" id="img-progress-label">Compressing...</span>
+          </div>
+
+          <div class="img-preview-grid" id="img-preview-grid"></div>
+          <p class="img-count-label" id="img-count-label"></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="sell-btn">
+          List Item
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    requireAuth();
+    const user = getUser();
+    document.getElementById('nav-username').textContent = user.name;
+    document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
+
+    function onDealTypeChange() {
+      const isSell = document.getElementById('deal-sell').checked;
+      document.getElementById('price-group').style.display    = isSell ? '' : 'none';
+      document.getElementById('exchange-group').style.display = isSell ? 'none' : '';
+      if (isSell) {
+        document.getElementById('item-exchange-for').value = '';
+      } else {
+        document.getElementById('item-price').value = '';
+      }
+    }
+
+    // Resubmit mode: pre-fill form if ?resubmit=itemId in URL
+    const resubmitId = new URLSearchParams(window.location.search).get('resubmit');
+    if (resubmitId) {
+      document.querySelector('.page-header h2').textContent = 'Edit & Resubmit Item';
+      document.querySelector('.page-header p').textContent  = 'Update your item and resubmit for admin review.';
+      document.getElementById('sell-btn').textContent = 'Resubmit for Review';
+
+      fetch(API + '/my-items?user_id=' + user.id)
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success) return;
+          const item = data.items.find(i => i._id === resubmitId);
+          if (!item) return;
+          document.getElementById('item-name').value         = item.name || '';
+          document.getElementById('item-category').value    = item.category || '';
+          document.getElementById('item-subject').value     = item.subject || '';
+          document.getElementById('item-condition').value   = item.condition || '';
+          document.getElementById('item-description').value = item.description || '';
+          if (item.deal_type === 'exchange') {
+            document.getElementById('deal-exchange').checked = true;
+            document.getElementById('item-exchange-for').value = item.exchange_for || '';
+            onDealTypeChange();
+          } else {
+            document.getElementById('deal-sell').checked = true;
+            document.getElementById('item-price').value = item.price || '';
+          }
+        })
+        .catch(() => {});
+    }
+
+    if (resubmitId) {
+      document.getElementById('sell-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('sell-btn');
+        const category = document.getElementById('item-category').value;
+        if (!category) { showAlert('sell-alert', 'Please select a category.'); return; }
+        const dealType    = document.querySelector('input[name="deal_type"]:checked').value;
+        const isSell      = dealType === 'sell';
+        const priceVal    = document.getElementById('item-price').value;
+        const exchangeFor = document.getElementById('item-exchange-for').value.trim();
+        if (isSell && (!priceVal || isNaN(priceVal) || Number(priceVal) < 0)) {
+          showAlert('sell-alert', 'Please enter a valid price.'); return;
+        }
+        if (!isSell && !exchangeFor) {
+          showAlert('sell-alert', 'Please specify what you want to exchange for.'); return;
+        }
+        const formData = new FormData();
+        formData.append('name',         document.getElementById('item-name').value.trim());
+        formData.append('category',     category);
+        formData.append('subject',      document.getElementById('item-subject').value.trim());
+        formData.append('price',        isSell ? Number(priceVal) : 0);
+        formData.append('condition',    document.getElementById('item-condition').value);
+        formData.append('description',  document.getElementById('item-description').value.trim());
+        formData.append('deal_type',    dealType);
+        formData.append('exchange_for', exchangeFor);
+        selectedFiles.forEach(function(entry, i) {
+          formData.append('images', entry.compressed || entry.file, 'image_' + i + '.jpg');
+        });
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Resubmitting...';
+        try {
+          const res  = await fetch(API + '/items/' + resubmitId + '/resubmit', { method: 'PUT', body: formData });
+          const data = await res.json();
+          if (!res.ok) { showAlert('sell-alert', data.error || 'Failed to resubmit.'); }
+          else {
+            showAlert('sell-alert', 'Item resubmitted! Awaiting admin review.', 'success');
+            setTimeout(() => window.location.href = 'dashboard.html', 1800);
+          }
+        } catch { showAlert('sell-alert', 'Cannot connect to server.'); }
+        finally { btn.disabled = false; btn.innerHTML = 'Resubmit for Review'; }
+      };
+    }
+  </script>
+</body>
+</html>

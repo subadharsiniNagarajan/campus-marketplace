@@ -1,0 +1,304 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+  // Auto-redirect from file:// to localhost:3000
+  if (window.location.protocol === "file:") {
+    var page = window.location.pathname.split("/").pop() || "index.html";
+    window.location.replace("http://localhost:3000/" + page);
+  }
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* My Listings */
+    .my-listings-wrap { margin-top: 2rem; }
+    .my-listings-hdr  { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .my-listings-hdr h2 { font-size:1.1rem; font-weight:800; color:var(--text); }
+
+    .my-item-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 68px 1fr auto;
+      gap: 1rem;
+      align-items: start;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 0.75rem;
+      transition: box-shadow 0.18s;
+    }
+    .my-item-card:hover { box-shadow: var(--shadow); }
+
+    .my-item-thumb {
+      width:68px; height:68px; border-radius:10px;
+      background:var(--bg2); display:flex; align-items:center;
+      justify-content:center; font-size:1.6rem; flex-shrink:0; overflow:hidden;
+    }
+    .my-item-thumb img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+
+    .my-item-info { display:flex; flex-direction:column; gap:0.35rem; min-width:0; }
+    .my-item-name { font-weight:700; font-size:0.95rem; color:var(--text); }
+    .my-item-meta { font-size:0.8rem; color:var(--text2); }
+
+    .status-badge {
+      display:inline-flex; align-items:center; gap:0.3rem;
+      padding:0.22rem 0.75rem; border-radius:20px;
+      font-size:0.72rem; font-weight:800; text-transform:uppercase;
+      letter-spacing:0.4px; width:fit-content; margin-top:0.1rem;
+    }
+    .s-pending    { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.35); }
+    .s-approved   { background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.35); }
+    .s-rejected   { background:rgba(239,68,68,0.12);  color:#dc2626; border:1px solid rgba(239,68,68,0.35); }
+    .s-correction { background:rgba(59,130,246,0.12); color:#2563eb; border:1px solid rgba(59,130,246,0.35); }
+
+    .feedback-box {
+      margin-top:0.5rem;
+      padding:0.6rem 0.85rem;
+      border-radius:8px;
+      font-size:0.82rem;
+      line-height:1.5;
+    }
+    .feedback-box.correction {
+      background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af;
+    }
+    .feedback-box.rejected {
+      background:#fef2f2; border:1px solid #fecaca; color:#991b1b;
+    }
+    .feedback-box strong { display:block; margin-bottom:0.2rem; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.4px; }
+    .feedback-box .admin-note { margin-top:0.3rem; color:inherit; opacity:0.75; font-style:italic; }
+
+    .btn-resubmit {
+      display:inline-block; background:var(--p1); color:#fff;
+      border:none; border-radius:8px; padding:0.42rem 1rem;
+      font-size:0.8rem; font-weight:700; cursor:pointer;
+      text-decoration:none; transition:opacity 0.18s; white-space:nowrap;
+    }
+    .btn-resubmit:hover { opacity:0.85; }
+
+    .my-item-actions { display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem; padding-top:0.1rem; }
+
+    .listings-empty {
+      text-align:center; padding:2.5rem; color:var(--text3);
+      background:var(--card); border:1px dashed var(--border);
+      border-radius:var(--radius);
+    }
+    .listings-empty a { color:var(--p1); font-weight:600; }
+    .action-card .icon { display:flex; align-items:center; justify-content:center; width:72px; height:72px; border-radius:20px; margin-bottom:1.1rem; font-size:2.4rem; line-height:1; }
+    .sell-icon { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); box-shadow: 0 6px 20px rgba(124,58,237,0.2); }
+    .buy-icon  { background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); box-shadow: 0 6px 20px rgba(236,72,153,0.2); }
+    .action-card .icon svg { display:block; }
+    .nav-links a svg { vertical-align:middle; margin-right:0.2rem; flex-shrink:0; }
+
+
+    @media (max-width:600px) {
+      .my-item-card { grid-template-columns:52px 1fr; }
+      .my-item-actions { grid-column:1/-1; flex-direction:row; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Campus<span>Mart</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html" class="active">&#127968; <span>Home</span></a>
+      <a href="sell.html">&#129689; <span>Sell</span></a>
+      <a href="buy.html">&#128722; <span>Buy</span></a>
+      <a href="chat.html">&#128172; <span>Chat</span></a>
+    </div>
+    <div class="nav-user">
+      <a href="settings.html" title="Profile" style="text-decoration:none;"><div class="avatar" id="avatar-initials">?</div></a>
+      <span class="nav-username" id="nav-username">Student</span>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <div class="welcome-banner">
+      <h1>Welcome back, <span id="welcome-name">Student</span></h1>
+      <p>Ready to buy or sell something today?</p>
+    </div>
+
+    <div class="dashboard-actions">
+      <a href="sell.html" class="action-card">
+        <span class="icon sell-icon">&#128230;</span>
+        <h3>Sell an Item</h3>
+        <p>List your books, notes, calculators, or lab materials for other students.</p>
+      </a>
+      <a href="buy.html" class="action-card">
+        <span class="icon buy-icon">&#128722;</span>
+        <h3>Browse Items</h3>
+        <p>Find affordable academic items listed by fellow students on campus.</p>
+      </a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="total-items">-</div>
+        <div class="stat-label">Items in Market</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="my-approved-count">-</div>
+        <div class="stat-label">My Approved</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="my-pending-count">-</div>
+        <div class="stat-label">Pending Review</div>
+      </div>
+    </div>
+
+    <!-- My Listings -->
+    <div class="my-listings-wrap">
+      <div class="my-listings-hdr">
+        <div style="display:flex;align-items:center;gap:0.6rem;">
+          <h2>My Listings</h2>
+          <span id="refresh-indicator" style="font-size:0.72rem;color:var(--text3);font-weight:500;"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.6rem;">
+          <button onclick="loadMyListings()" style="background:var(--bg2);border:1.5px solid var(--border2);color:var(--p1);border-radius:8px;padding:0.35rem 0.75rem;font-size:0.8rem;font-weight:700;cursor:pointer;" title="Refresh listings">&#8635; Refresh</button>
+          <a href="sell.html" class="btn btn-primary" style="font-size:0.82rem;padding:0.4rem 0.9rem;">+ New Listing</a>
+        </div>
+      </div>
+      <div id="my-listings-grid">
+        <div class="listings-empty">Loading your listings...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    requireAuth();
+    const user = getUser();
+    document.getElementById('welcome-name').textContent    = user.name;
+    document.getElementById('nav-username').textContent    = user.name;
+    document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
+
+    // Marketplace item count
+    fetch(API + '/items').then(r => r.json()).then(data => {
+      if (data.success) document.getElementById('total-items').textContent = data.items.length;
+    }).catch(() => {});
+
+    // ── My Listings ──────────────────────────────────────────────────
+    async function loadMyListings() {
+      const grid = document.getElementById('my-listings-grid');
+      try {
+        const indicator = document.getElementById('refresh-indicator');
+        if (indicator) indicator.textContent = 'Refreshing...';
+
+        // Build URL with user_id fallback for sessions without JWT token
+        const myItemsUrl = API + '/my-items?user_id=' + user.id + '&t=' + Date.now();
+        const myHeaders = { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' };
+        const authH = userAuthHeaders();
+        if (authH.Authorization) myHeaders['Authorization'] = authH.Authorization;
+        const res  = await fetch(myItemsUrl, { headers: myHeaders });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          grid.innerHTML = '<div class="listings-empty">Could not load listings.</div>';
+          return;
+        }
+
+        const items = data.items;
+        document.getElementById('my-approved-count').textContent = items.filter(i => i.status === 'Approved').length;
+        document.getElementById('my-pending-count').textContent  = items.filter(i => i.status === 'Pending' || i.status === 'Needs Correction').length;
+
+        if (!items.length) {
+          grid.innerHTML = '<div class="listings-empty">You have not listed any items yet. <a href="sell.html">List one now!</a></div>';
+          return;
+        }
+
+        grid.innerHTML = items.map(item => buildItemCard(item)).join('');
+
+        // Show last updated time
+        if (indicator) {
+          const now = new Date();
+          indicator.textContent = 'Updated ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+      } catch(err) {
+        grid.innerHTML = '<div class="listings-empty">Could not load listings. Make sure the server is running.</div>';
+      }
+    }
+
+    function buildItemCard(item) {
+      const status = item.status || 'Pending';
+
+      // Thumb
+      const imgHtml = item.image
+        ? '<img src="' + API + '/uploads/' + item.image + '" onerror="this.style.display=\'none\'" />'
+        : '<span style="font-size:1.8rem;">&#128230;</span>';
+
+      // Price
+      const priceText = item.deal_type === 'exchange'
+        ? 'Exchange'
+        : 'Rs.' + Number(item.price).toLocaleString();
+
+      // Status badge
+      const statusClass = {
+        'Pending':          's-pending',
+        'Approved':         's-approved',
+        'Rejected':         's-rejected',
+        'Needs Correction': 's-correction'
+      }[status] || 's-pending';
+
+      const statusDot = {
+        'Pending':          '&#9679;',
+        'Approved':         '&#9679;',
+        'Rejected':         '&#9679;',
+        'Needs Correction': '&#9679;'
+      }[status] || '&#9679;';
+
+      // Feedback box (shown for Rejected or Needs Correction)
+      let feedbackHtml = '';
+      if ((status === 'Rejected' || status === 'Needs Correction') && item.rejection_reason) {
+        const cls   = status === 'Rejected' ? 'rejected' : 'correction';
+        const label = status === 'Rejected' ? 'Reason for Rejection' : 'Correction Required';
+        feedbackHtml = '<div class="feedback-box ' + cls + '">'
+          + '<strong>' + label + '</strong>'
+          + e(item.rejection_reason)
+          + (item.admin_comment
+              ? '<div class="admin-note">Admin note: ' + e(item.admin_comment) + '</div>'
+              : '')
+          + '</div>';
+      }
+
+      // Resubmit button
+      const canResubmit = status === 'Rejected' || status === 'Needs Correction';
+      const resubmitBtn = canResubmit
+        ? '<a href="sell.html?resubmit=' + item._id + '" class="btn-resubmit">Edit &amp; Resubmit</a>'
+        : '';
+
+      return '<div class="my-item-card">'
+        + '<div class="my-item-thumb">' + imgHtml + '</div>'
+        + '<div class="my-item-info">'
+          + '<div class="my-item-name">' + e(item.name) + '</div>'
+          + '<div class="my-item-meta">' + e(item.category) + ' &middot; ' + priceText + ' &middot; ' + e(item.condition) + '</div>'
+          + '<span class="status-badge ' + statusClass + '">' + statusDot + ' ' + status + '</span>'
+          + feedbackHtml
+        + '</div>'
+        + '<div class="my-item-actions">' + resubmitBtn + '</div>'
+        + '</div>';
+    }
+
+    function e(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    // Load on page open
+    loadMyListings();
+
+    // Re-fetch when user comes back to this tab (e.g. after admin reviews)
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        loadMyListings();
+      }
+    });
+
+    // Auto-refresh every 15 seconds so status updates appear without manual reload
+    setInterval(loadMyListings, 15000);
+  </script>
+</body>
+</html>

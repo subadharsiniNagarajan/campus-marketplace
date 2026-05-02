@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buy – CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Campus<span>Mart</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html">🏠 Home</a>
+      <a href="sell.html">📦 Sell</a>
+      <a href="buy.html" class="active">🛒 Buy</a>
+    </div>
+    <div class="nav-user">
+      <div class="avatar" id="avatar-initials">?</div>
+      <span id="nav-username">Student</span>
+      <button class="btn btn-danger" onclick="logout()" style="padding:0.4rem 0.9rem; font-size:0.85rem;">Logout</button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <div class="page-header">
+      <h2>🛒 Browse Items</h2>
+      <p>Find academic items listed by students on your campus.</p>
+    </div>
+
+    <div class="filters-bar">
+      <input type="text" class="search-input" id="search-input" placeholder="🔍 Search items..." oninput="filterItems()" />
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('Books', this)">📚 Books</button>
+      <button class="filter-btn" onclick="setFilter('Calculator', this)">🔢 Calculator</button>
+      <button class="filter-btn" onclick="setFilter('Notes', this)">📝 Notes</button>
+      <button class="filter-btn" onclick="setFilter('Lab Materials', this)">🔬 Lab Materials</button>
+    </div>
+
+    <div class="items-grid" id="items-grid">
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <h3>Loading items...</h3>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    requireAuth();
+    const user = getUser();
+    document.getElementById('nav-username').textContent = user.name;
+    document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
+
+    let allItems = [];
+    let activeCategory = 'all';
+
+    async function loadItems() {
+      try {
+        const res = await fetch('http://localhost:3000/items');
+        if (!res.ok) throw new Error('Server returned ' + res.status);
+        const data = await res.json();
+        allItems = data.items || [];
+        renderItems(allItems);
+      } catch (err) {
+        console.error('Fetch error:', err);
+        document.getElementById('items-grid').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <h3>Could not load items</h3>
+            <p>Open this page via <b>http://localhost:3000/buy.html</b> — not as a file.</p>
+          </div>`;
+      }
+    }
+
+    function setFilter(category, btn) {
+      activeCategory = category;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterItems();
+    }
+
+    function filterItems() {
+      const search = document.getElementById('search-input').value.toLowerCase();
+      let filtered = allItems;
+      if (activeCategory !== 'all') filtered = filtered.filter(i => i.category === activeCategory);
+      if (search) filtered = filtered.filter(i =>
+        i.name.toLowerCase().includes(search) ||
+        i.subject.toLowerCase().includes(search) ||
+        (i.description || '').toLowerCase().includes(search)
+      );
+      renderItems(filtered);
+    }
+
+    function renderItems(items) {
+      const grid = document.getElementById('items-grid');
+      if (!items.length) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>No items found</h3>
+            <p>Try a different search or category.</p>
+          </div>`;
+        return;
+      }
+
+      const categoryIcons = { Books: '📚', Calculator: '🔢', Notes: '📝', 'Lab Materials': '🔬' };
+
+      grid.innerHTML = items.map(item => {
+        const icon = categoryIcons[item.category] || '📦';
+        const imgHtml = item.image
+          ? `<img src="http://localhost:3000/uploads/${item.image}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
+          : `<span>${icon}</span>`;
+
+        const condClass = { New: 'condition-new', Good: 'condition-good', Used: 'condition-used' }[item.condition] || '';
+        const desc = item.description ? escapeHtml(item.description.substring(0, 80)) + (item.description.length > 80 ? '...' : '') : '';
+
+        return `
+          <div class="item-card">
+            <div class="item-img">${imgHtml}</div>
+            <div class="item-body">
+              <span class="item-category">${item.category}</span>
+              <div class="item-name">${escapeHtml(item.name)}</div>
+              <div class="item-subject">📖 ${escapeHtml(item.subject)}</div>
+              <span class="item-condition ${condClass}">${item.condition}</span>
+              ${desc ? `<p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:0.5rem;">${desc}</p>` : ''}
+              <div class="item-footer">
+                <span class="item-price">₹${Number(item.price).toLocaleString()}</span>
+                <span class="item-contact">📞 ${escapeHtml(item.contact)}</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    loadItems();
+  </script>
+</body>
+</html>

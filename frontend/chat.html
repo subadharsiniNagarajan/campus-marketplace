@@ -1,0 +1,341 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+  // Auto-redirect from file:// to localhost:3000
+  if (window.location.protocol === "file:") {
+    var page = window.location.pathname.split("/").pop() || "index.html";
+    window.location.replace("http://localhost:3000/" + page);
+  }
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat – CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<style>.nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }</style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Campus<span>Mart</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html">&#127968; <span>Home</span></a>
+      <a href="sell.html">&#129689; <span>Sell</span></a>
+      <a href="buy.html">&#128722; <span>Buy</span></a>
+      <a href="chat.html" class="active">&#128172; <span>Chat</span></a>
+    </div>
+    <div class="nav-user">
+      <a href="settings.html" title="Profile" style="text-decoration:none;"><div class="avatar" id="avatar-initials">?</div></a>
+      <span class="nav-username" id="nav-username">Student</span>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <div class="page-header">
+      <h2>💬 My Messages</h2>
+      <p>Real-time private conversations with other students.</p>
+    </div>
+
+    <div class="chat-layout">
+      <div class="threads-panel">
+        <div class="threads-header">
+          💬 Conversations
+          <span id="socket-status" class="socket-dot disconnected" title="Connecting..."></span>
+        </div>
+        <div class="threads-list" id="threads-list">
+          <div class="no-threads">Loading...</div>
+        </div>
+      </div>
+
+      <div class="chat-panel" id="chat-panel">
+        <div class="chat-empty-state" id="chat-empty">
+          <div class="ce-icon">💬</div>
+          <strong>Select a conversation</strong>
+          <span style="font-size:0.85rem;">or start one from the Buy page</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    requireAuth();
+    const user = getUser();
+    document.getElementById('nav-username').textContent = user.name;
+    document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
+
+    let activeThread = null;
+    let socket       = null;
+
+    // Tracks every rendered message key so appendMessage() never renders the same message twice.
+    const renderedMsgIds = new Set();
+
+    function msgKey(m) {
+      return m._id ? String(m._id) : (m.senderEmail + '|' + m.text + '|' + m.createdAt);
+    }
+
+    // ── Socket ───────────────────────────────────────────────────────────────
+    function initSocket() {
+      if (socket) return; // only ever create one socket
+      socket = io(API, { transports: ['websocket', 'polling'] });
+
+      socket.on('connect', function () {
+        setSocketStatus(true);
+        if (activeThread) joinRoom(activeThread);
+      });
+
+      socket.on('disconnect', function () { setSocketStatus(false); });
+
+      socket.on('room_joined', function (d) {
+        console.log('[Socket] joined room:', d.room);
+      });
+
+      // Single listener — dedup is handled inside appendMessage()
+      socket.on('new_message', function (msg) { appendMessage(msg); });
+
+      socket.on('error', function (d) { console.error('[Socket] error:', d.message); });
+    }
+
+    function setSocketStatus(connected) {
+      var dot = document.getElementById('socket-status');
+      if (!dot) return;
+      dot.className = 'socket-dot ' + (connected ? 'connected' : 'disconnected');
+      dot.title     = connected ? 'Connected — real-time' : 'Disconnected';
+    }
+
+    function joinRoom(thread) {
+      if (!socket || !thread) return;
+      socket.emit('join_room', {
+        itemId:     thread.itemId,
+        myEmail:    user.email,
+        otherEmail: thread.otherEmail
+      });
+    }
+
+    // ── Thread store (indexed by itemId__otherEmail for fast lookup) ─────────
+    var threadStore = {};
+
+    // ── Thread list ──────────────────────────────────────────────────────────
+    async function loadThreads() {
+      try {
+        var res  = await fetch(API + '/chat/threads?myEmail=' + encodeURIComponent(user.email));
+        var data = await res.json();
+        var list = document.getElementById('threads-list');
+
+        if (!data.success || !data.threads.length) {
+          list.innerHTML = '<div class="no-threads">No conversations yet.<br>Go to Buy page and message a seller.</div>';
+          // Still check URL params in case we arrived from buy page
+          var p = new URLSearchParams(window.location.search);
+          if (p.get('itemId') && p.get('otherEmail')) {
+            openThread(p.get('itemId'), p.get('otherEmail'), p.get('itemName') || 'Item', p.get('otherEmail'));
+          }
+          return;
+        }
+
+        // Store threads by key for click handler
+        threadStore = {};
+        data.threads.forEach(function (t) {
+          var key = t.itemId + '__' + t.otherEmail;
+          threadStore[key] = t;
+        });
+
+        list.innerHTML = data.threads.map(function (t) {
+          var key      = t.itemId + '__' + t.otherEmail;
+          var label    = esc(t.otherName) + ' <span class="t-role">(' + esc(t.role) + ': ' + esc(t.itemName) + ')</span>';
+          var preview  = esc((t.lastMsg || '').substring(0, 50)) + (t.lastMsg && t.lastMsg.length > 50 ? '…' : '');
+          return '<div class="thread-item" id="thread-' + esc(key) + '" data-key="' + esc(key) + '" onclick="openThreadByKey(this.dataset.key)">'
+            + '<div class="t-name">' + label + '</div>'
+            + '<div class="t-preview">' + preview + '</div>'
+            + '</div>';
+        }).join('');
+
+        // Auto-open from URL params (e.g. arriving from buy page)
+        var p = new URLSearchParams(window.location.search);
+        if (p.get('itemId') && p.get('otherEmail')) {
+          openThread(p.get('itemId'), p.get('otherEmail'), p.get('itemName') || 'Item', p.get('otherEmail'));
+        }
+      } catch (err) {
+        console.error('[loadThreads] error:', err);
+      }
+    }
+
+    // ── Open thread by key (from thread list click) ──────────────────────────
+    function openThreadByKey(key) {
+      var t = threadStore[key];
+      if (!t) return;
+      openThread(t.itemId, t.otherEmail, t.itemName, t.otherName);
+    }
+
+    // ── Open a conversation ──────────────────────────────────────────────────
+    function openThread(itemId, otherEmail, itemName, otherName) {
+      otherName = otherName || otherEmail; // fallback to email if name not available
+      activeThread = { itemId: itemId, otherEmail: otherEmail, itemName: itemName, otherName: otherName };
+
+      document.querySelectorAll('.thread-item').forEach(function (el) { el.classList.remove('active'); });
+      var key = itemId + '__' + otherEmail;
+      var el  = document.getElementById('thread-' + key);
+      if (el) el.classList.add('active');
+
+      joinRoom(activeThread);
+
+      var panel = document.getElementById('chat-panel');
+      panel.innerHTML =
+        '<div class="chat-header">'
+          + '<div class="ch-avatar">' + esc(otherName).charAt(0).toUpperCase() + '</div>'
+          + '<div class="ch-info">'
+            + '<div class="ch-name">' + esc(otherName) + '</div>'
+            + '<div class="ch-item">📦 ' + esc(itemName) + '</div>'
+          + '</div>'
+        + '</div>'
+        + '<div class="messages-area" id="messages-area"></div>'
+        + '<div class="chat-input-area">'
+          + '<textarea id="msg-input" placeholder="Type a message..." rows="1"'
+          + ' onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendMessage();}"'
+          + ' oninput="autoResize(this)"></textarea>'
+          + '<button class="btn-send" onclick="sendMessage()" id="send-btn" title="Send">➤</button>'
+        + '</div>';
+
+      fetchMessages();
+    }
+
+    // ── Load message history ─────────────────────────────────────────────────
+    async function fetchMessages() {
+      if (!activeThread) return;
+      var itemId     = activeThread.itemId;
+      var otherEmail = activeThread.otherEmail;
+      try {
+        var url  = API + '/api/messages/' + itemId
+                 + '?myEmail='    + encodeURIComponent(user.email)
+                 + '&otherEmail=' + encodeURIComponent(otherEmail);
+        var res  = await fetch(url);
+        var data = await res.json();
+        if (!data.success) { console.warn('[fetchMessages] failed:', data); return; }
+
+        var area = document.getElementById('messages-area');
+        if (!area) return;
+
+        area.innerHTML = '';
+        renderedMsgIds.clear();
+
+        if (data.messages.length === 0) {
+          area.innerHTML = '<div class="chat-day-label">No messages yet. Say hello! 👋</div>';
+        } else {
+          var lastDate = '';
+          data.messages.forEach(function (m) {
+            var d = new Date(m.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+            if (d !== lastDate) {
+              area.insertAdjacentHTML('beforeend', '<div class="chat-day-label">' + d + '</div>');
+              lastDate = d;
+            }
+            appendMessage(m);
+          });
+        }
+        scrollToBottom();
+      } catch (err) {
+        console.error('[fetchMessages] error:', err);
+      }
+    }
+
+    // ── appendMessage — single entry point for all DOM writes ────────────────
+    function appendMessage(msg) {
+      var area = document.getElementById('messages-area');
+      if (!area) return;
+
+      var key = msgKey(msg);
+      if (renderedMsgIds.has(key)) return;
+      renderedMsgIds.add(key);
+
+      var placeholder = area.querySelector('.chat-day-label');
+      if (placeholder && placeholder.textContent.includes('No messages')) placeholder.remove();
+
+      area.insertAdjacentHTML('beforeend', buildBubble(msg));
+      scrollToBottom();
+    }
+
+    function buildBubble(m) {
+      var isMine = m.senderEmail === user.email.toLowerCase();
+      var time   = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return '<div class="msg-bubble ' + (isMine ? 'sent' : 'received') + '">' 
+           + esc(m.text)
+           + '<div class="msg-meta">' + (isMine ? 'You' : esc(m.senderName)) + ' · ' + time + '</div>'
+           + '</div>';
+    }
+
+    // ── Send — no optimistic render ──────────────────────────────────────────
+    async function sendMessage() {
+      if (!activeThread) return;
+      var input = document.getElementById('msg-input');
+      var btn   = document.getElementById('send-btn');
+      var text  = input.value.trim();
+      if (!text) return;
+
+      btn.disabled       = true;
+      input.value        = '';
+      input.style.height = '';
+
+      var payload = {
+        itemId:        activeThread.itemId,
+        senderEmail:   user.email,
+        receiverEmail: activeThread.otherEmail,
+        senderName:    user.name,
+        text:          text
+      };
+
+      try {
+        var res  = await fetch(API + '/api/messages', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (!res.ok) {
+          alert(data.error || 'Failed to send.');
+          input.value = text;
+        }
+        // On success the server emits new_message to the room.
+        // appendMessage() will render it when that socket event arrives.
+      } catch (err) {
+        console.error('[sendMessage] network error:', err);
+        alert('Network error. Try again.');
+        input.value = text;
+      } finally {
+        btn.disabled = false;
+        input.focus();
+      }
+    }
+
+    function scrollToBottom() {
+      var area = document.getElementById('messages-area');
+      if (area) area.scrollTop = area.scrollHeight;
+    }
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    }
+
+    function esc(str) {
+      var d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    initSocket();
+    loadThreads();
+  </script>
+
+  <style>
+    .socket-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-left:.5rem; vertical-align:middle; transition:background .3s; }
+    .socket-dot.connected    { background:#10b981; box-shadow:0 0 6px #10b981; }
+    .socket-dot.disconnected { background:#ef4444; }
+    .chat-day-label { text-align:center; font-size:.72rem; color:var(--text3); font-weight:600; margin:.5rem 0; position:relative; }
+    .chat-day-label::before, .chat-day-label::after { content:''; position:absolute; top:50%; width:30%; height:1px; background:var(--border); }
+    .chat-day-label::before { left:0; }
+    .chat-day-label::after  { right:0; }
+    .typing-indicator { margin-left:auto; font-size:.75rem; color:var(--text2); font-style:italic; animation:pulse 1.2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .t-role { font-size:.78rem; font-weight:500; color:var(--p1); }
+  </style>
+</body>
+</html>

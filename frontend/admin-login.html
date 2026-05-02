@@ -1,0 +1,375 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+  // Auto-redirect from file:// to localhost:3000
+  if (window.location.protocol === "file:") {
+    var page = window.location.pathname.split("/").pop() || "index.html";
+    window.location.replace("http://localhost:3000/" + page);
+  }
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal – CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background: #0f0e17; }
+
+    .admin-auth-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Left — dark branding panel */
+    .admin-left {
+      background: linear-gradient(145deg, #1a0533 0%, #0f0e17 50%, #1a0533 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      position: relative;
+      overflow: hidden;
+      border-right: 1px solid rgba(124,58,237,0.2);
+    }
+
+    .admin-left::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .admin-left-content { position: relative; z-index: 1; text-align: center; }
+
+    .admin-brand {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -1px;
+      margin-bottom: 0.4rem;
+    }
+    .admin-brand span { color: #a78bfa; }
+
+    .admin-badge-big {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(124,58,237,0.2);
+      color: #a78bfa;
+      border: 1px solid rgba(124,58,237,0.35);
+      border-radius: 99px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2rem;
+    }
+
+    .admin-perms {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      text-align: left;
+      margin-top: 1rem;
+    }
+
+    .admin-perm {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+    }
+
+    .admin-perm .ap-icon { font-size: 1.2rem; }
+    .admin-perm .ap-text { font-size: 0.85rem; color: rgba(255,255,255,0.65); font-weight: 500; }
+
+    /* Right — form panel */
+    .admin-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: #16162a;
+    }
+
+    .admin-card {
+      width: 100%;
+      max-width: 400px;
+      animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .admin-card-header { margin-bottom: 1.75rem; }
+    .admin-card-header h2 { font-size: 1.6rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+    .admin-card-header p  { color: rgba(255,255,255,0.4); font-size: 0.88rem; margin-top: 0.3rem; }
+
+    /* Override form styles for dark theme */
+    .admin-card .form-group label { color: rgba(255,255,255,0.5); }
+
+    .admin-card .form-group input {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    .admin-card .form-group input::placeholder { color: rgba(255,255,255,0.25); }
+
+    .admin-card .form-group input:focus {
+      border-color: #7c3aed;
+      background: rgba(124,58,237,0.08);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+    }
+
+    .admin-tabs {
+      display: flex;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 1.75rem;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .admin-tab {
+      flex: 1;
+      padding: 0.55rem;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.4);
+      transition: all 0.2s;
+    }
+
+    .admin-tab.active {
+      background: rgba(124,58,237,0.3);
+      color: #a78bfa;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.2);
+    }
+
+    .admin-card .alert-error   { background: rgba(239,68,68,0.1); color: #fca5a5; border-color: rgba(239,68,68,0.2); }
+    .admin-card .alert-success { background: rgba(16,185,129,0.1); color: #6ee7b7; border-color: rgba(16,185,129,0.2); }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.3);
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: rgba(255,255,255,0.6); }
+
+    @media (max-width: 768px) {
+      .admin-auth-page { grid-template-columns: 1fr; }
+      .admin-left { display: none; }
+      .admin-right { min-height: 100vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-auth-page">
+
+    <!-- Left branding -->
+    <div class="admin-left">
+      <div class="admin-left-content">
+        <div class="admin-brand">Campus<span>Mart</span></div>
+        <div class="admin-badge-big">🔐 Admin Portal</div>
+        <div class="admin-perms">
+          <div class="admin-perm"><span class="ap-icon">📊</span><span class="ap-text">View live dashboard stats</span></div>
+          <div class="admin-perm"><span class="ap-icon">📦</span><span class="ap-text">Manage all listed items</span></div>
+          <div class="admin-perm"><span class="ap-icon">👥</span><span class="ap-text">View and remove users</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right form -->
+    <div class="admin-right">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2 id="admin-title">Admin Login</h2>
+          <p id="admin-sub">Sign in to access the admin panel</p>
+        </div>
+
+        <div class="admin-tabs">
+          <div class="admin-tab active" id="tab-login" onclick="switchAdminTab('login')">Login</div>
+          <div class="admin-tab" id="tab-register" onclick="switchAdminTab('register')">Register</div>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <!-- Login Form -->
+        <form id="login-form" onsubmit="handleAdminLogin(event)">
+          <div class="form-group">
+            <label>Admin Email</label>
+            <input type="email" id="login-email" placeholder="admin@example.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Enter your password" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn" style="padding:0.75rem;font-size:0.95rem;margin-top:0.25rem;">
+            Sign In to Admin Panel
+          </button>
+          <p style="text-align:center;margin-top:1rem;font-size:0.82rem;color:rgba(255,255,255,0.3);">
+            No account? <a href="#" onclick="switchAdminTab('register')" style="color:#a78bfa;font-weight:700;">Register here</a>
+          </p>
+        </form>
+
+        <!-- Register Form -->
+        <form id="register-form" style="display:none;" onsubmit="handleAdminRegister(event)">
+          <div id="register-note" style="display:none;margin-bottom:1rem;padding:0.65rem 0.9rem;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.3);border-radius:10px;font-size:0.8rem;color:#c4b5fd;">
+            🔐 You are logged in as an admin — you can register a second admin account below.
+          </div>
+          <div id="register-locked" style="display:none;margin-bottom:1rem;padding:0.65rem 0.9rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;font-size:0.8rem;color:#fca5a5;">
+            ⚠️ A second admin can only be added by an existing logged-in admin. Please log in first, then return here to register another admin.
+          </div>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="reg-name" placeholder="Admin full name" required />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="reg-email" placeholder="admin@example.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="reg-password" placeholder="Min. 6 characters" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="register-btn" style="padding:0.75rem;font-size:0.95rem;margin-top:0.25rem;">
+            Create Admin Account
+          </button>
+          <p style="text-align:center;margin-top:1rem;font-size:0.82rem;color:rgba(255,255,255,0.3);">
+            Already registered? <a href="#" onclick="switchAdminTab('login')" style="color:#a78bfa;font-weight:700;">Sign in</a>
+          </p>
+        </form>
+
+        <a href="index.html" class="back-link">← Back to student login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000';
+
+    // Redirect if already logged in
+    if (localStorage.getItem('campusmart_admin')) {
+      window.location.href = 'admin.html';
+    }
+
+    function switchAdminTab(tab) {
+      const isLogin = tab === 'login';
+      document.getElementById('login-form').style.display    = isLogin ? 'block' : 'none';
+      document.getElementById('register-form').style.display = isLogin ? 'none'  : 'block';
+      document.getElementById('tab-login').classList.toggle('active',    isLogin);
+      document.getElementById('tab-register').classList.toggle('active', !isLogin);
+      document.getElementById('admin-title').textContent = isLogin ? 'Admin Login'    : 'Admin Register';
+      document.getElementById('admin-sub').textContent   = isLogin ? 'Sign in to access the admin panel' : 'Create a new admin account';
+      clearAlert();
+
+      // Show contextual note on register tab
+      if (!isLogin) {
+        const alreadyAdmin = JSON.parse(localStorage.getItem('campusmart_admin') || 'null');
+        document.getElementById('register-note').style.display   = alreadyAdmin ? 'block' : 'none';
+        document.getElementById('register-locked').style.display = alreadyAdmin ? 'none'  : 'block';
+      }
+    }
+
+    function showAlert(msg, type = 'error') {
+      const el = document.getElementById('alert');
+      el.className = `alert alert-${type} show`;
+      el.textContent = msg;
+    }
+
+    function clearAlert() {
+      document.getElementById('alert').classList.remove('show');
+    }
+
+    // ── Admin Register ──────────────────────────────────────
+    async function handleAdminRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('register-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Creating...';
+
+      try {
+        // If an admin is already logged in (e.g. adding a second admin),
+        // include their token so the server allows the registration.
+        const existingAdmin = JSON.parse(localStorage.getItem('campusmart_admin') || 'null');
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (existingAdmin && existingAdmin.token) {
+          reqHeaders['Authorization'] = `Bearer ${existingAdmin.token}`;
+        }
+
+        const res = await fetch(`${API}/api/admin/register`, {
+          method: 'POST',
+          headers: reqHeaders,
+          body: JSON.stringify({
+            name:     document.getElementById('reg-name').value.trim(),
+            email:    document.getElementById('reg-email').value.trim(),
+            password: document.getElementById('reg-password').value
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert(data.error || 'Registration failed.');
+        } else {
+          showAlert('✅ Admin account created! Redirecting to login...', 'success');
+          document.getElementById('register-form').reset();
+          setTimeout(() => switchAdminTab('login'), 2000);
+        }
+      } catch {
+        showAlert('Cannot connect to server. Is it running?');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Admin Account';
+      }
+    }
+
+    // ── Admin Login ─────────────────────────────────────────
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+      try {
+        const res = await fetch(`${API}/api/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    document.getElementById('login-email').value.trim(),
+            password: document.getElementById('login-password').value
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert(data.error || 'Invalid credentials.');
+        } else {
+          localStorage.setItem('campusmart_admin', JSON.stringify({
+            token:   data.token,
+            name:    data.name,
+            adminId: data.adminId
+          }));
+          window.location.href = 'admin.html';
+        }
+      } catch {
+        showAlert('Cannot connect to server. Is it running?');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In to Admin Panel';
+      }
+    }
+  </script>
+</body>
+</html>

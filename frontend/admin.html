@@ -1,0 +1,642 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+  // Auto-redirect from file:// to localhost:3000
+  if (window.location.protocol === "file:") {
+    var page = window.location.pathname.split("/").pop() || "index.html";
+    window.location.replace("http://localhost:3000/" + page);
+  }
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel - CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background: #0f0f1a; }
+    .admin-nav { background:#1a1a2e; padding:0 2rem; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; border-bottom:1px solid rgba(255,255,255,0.07); }
+    .admin-nav .logo { color:#fff; font-size:1.2rem; font-weight:800; }
+    .admin-nav .logo span { color:var(--secondary); }
+    .admin-nav .admin-badge-nav { background:rgba(255,101,132,0.15); color:var(--secondary); border:1px solid rgba(255,101,132,0.3); border-radius:20px; padding:0.2rem 0.7rem; font-size:0.75rem; font-weight:700; text-transform:uppercase; }
+    .admin-nav .nav-right { display:flex; align-items:center; gap:1rem; }
+    .admin-nav .admin-name { color:rgba(255,255,255,0.7); font-size:0.88rem; }
+    .admin-layout { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 60px); }
+    .admin-sidebar { background:#16162a; padding:1.5rem 0; border-right:1px solid rgba(255,255,255,0.06); }
+    .sidebar-item { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1.5rem; color:rgba(255,255,255,0.55); font-size:0.9rem; font-weight:600; cursor:pointer; transition:0.2s; border-left:3px solid transparent; }
+    .sidebar-item:hover { color:#fff; background:rgba(255,255,255,0.05); }
+    .sidebar-item.active { color:var(--primary); border-left-color:var(--primary); background:rgba(108,99,255,0.1); }
+    .sidebar-item .si-icon { font-size:1.1rem; width:22px; text-align:center; }
+    .si-icon { display:inline-block; width:8px; height:8px; border-radius:2px; background:currentColor; opacity:0.7; flex-shrink:0; }
+    .si-dashboard  { background:#6c63ff; }
+    .si-pending    { background:#f59e0b; }
+    .si-items      { background:#10b981; }
+    .si-users      { background:#63b3ed; }
+    .si-admins     { background:#ef4444; }
+
+    .pending-badge { background:#f59e0b; color:#000; border-radius:10px; padding:0.1rem 0.5rem; font-size:0.7rem; font-weight:800; margin-left:auto; }
+    .admin-main { padding:2rem; overflow-y:auto; }
+    .admin-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:2rem; }
+    .admin-stat { background:#1e1e35; border-radius:14px; padding:1.4rem; border:1px solid rgba(255,255,255,0.07); }
+    .admin-stat .as-num { font-size:2.2rem; font-weight:800; color:var(--primary); line-height:1; margin-bottom:0.3rem; }
+    .admin-stat .as-label { color:rgba(255,255,255,0.5); font-size:0.82rem; }
+    .admin-stat .as-icon { font-size:1.6rem; margin-bottom:0.5rem; }
+    .admin-section { display:none; }
+    .admin-section.active { display:block; }
+    .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
+    .section-header h2 { color:#fff; font-size:1.3rem; }
+    .section-header p { color:rgba(255,255,255,0.45); font-size:0.85rem; margin-top:0.2rem; }
+    .admin-table-wrap { background:#1e1e35; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.07); }
+    .admin-search { padding:0.75rem 1rem; background:#16162a; border:none; border-bottom:1px solid rgba(255,255,255,0.07); color:#fff; font-size:0.9rem; width:100%; outline:none; }
+    .admin-search::placeholder { color:rgba(255,255,255,0.3); }
+    table { width:100%; border-collapse:collapse; }
+    th { background:#16162a; color:rgba(255,255,255,0.5); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; padding:0.75rem 1rem; text-align:left; font-weight:700; }
+    td { padding:0.8rem 1rem; color:rgba(255,255,255,0.8); font-size:0.88rem; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,0.03); }
+    .td-email { color:rgba(255,255,255,0.45); font-size:0.8rem; }
+    .td-date  { color:rgba(255,255,255,0.35); font-size:0.78rem; }
+    .badge { display:inline-block; padding:0.18rem 0.55rem; border-radius:6px; font-size:0.72rem; font-weight:700; }
+    .badge-sold   { background:rgba(39,174,96,0.15);  color:#2ecc71; }
+    .badge-active { background:rgba(108,99,255,0.15); color:#a29bfe; }
+    .badge-new    { background:rgba(39,174,96,0.15);  color:#2ecc71; }
+    .badge-good   { background:rgba(243,156,18,0.15); color:#f39c12; }
+    .badge-used   { background:rgba(231,76,60,0.15);  color:#e74c3c; }
+    .btn-del { background:rgba(231,76,60,0.12); color:#e74c3c; border:1px solid rgba(231,76,60,0.25); border-radius:7px; padding:0.3rem 0.7rem; font-size:0.8rem; font-weight:700; cursor:pointer; transition:0.2s; }
+    .btn-del:hover { background:rgba(231,76,60,0.25); }
+    .item-thumb { width:40px; height:40px; border-radius:8px; background:#2a2a45; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .item-thumb img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
+    .item-name-cell { display:flex; align-items:center; gap:0.75rem; }
+    .empty-row td { text-align:center; padding:3rem; color:rgba(255,255,255,0.25); }
+    .btn-refresh { background:rgba(108,99,255,0.12); color:var(--primary); border:1px solid rgba(108,99,255,0.25); border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; font-weight:600; cursor:pointer; transition:0.2s; }
+    .btn-refresh:hover { background:rgba(108,99,255,0.22); }
+
+    /* Moderation status badges */
+    .mod-badge { display:inline-block; padding:0.22rem 0.65rem; border-radius:20px; font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; }
+    .mod-pending    { background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); }
+    .mod-approved   { background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
+    .mod-rejected   { background:rgba(239,68,68,0.18);  color:#ef4444; border:1px solid rgba(239,68,68,0.3); }
+    .mod-correction { background:rgba(99,179,237,0.18); color:#63b3ed; border:1px solid rgba(99,179,237,0.3); }
+
+    /* Pending item cards */
+    .pending-card { background:#1e1e35; border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:1.5rem; margin-bottom:1.25rem; display:grid; grid-template-columns:130px 1fr; gap:1.25rem; }
+    .pcard-img { width:130px; height:130px; border-radius:10px; object-fit:cover; background:#2a2a45; display:flex; align-items:center; justify-content:center; font-size:2.5rem; flex-shrink:0; overflow:hidden; }
+    .pcard-img img { width:100%; height:100%; object-fit:cover; }
+    .pcard-body { display:flex; flex-direction:column; gap:0.55rem; }
+    .pcard-title { color:#fff; font-size:1.05rem; font-weight:700; }
+    .pcard-meta { color:rgba(255,255,255,0.45); font-size:0.82rem; display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .pcard-desc { color:rgba(255,255,255,0.6); font-size:0.85rem; line-height:1.5; }
+    .pcard-feedback { background:rgba(99,179,237,0.08); border:1px solid rgba(99,179,237,0.2); border-radius:8px; padding:0.6rem 0.8rem; font-size:0.82rem; color:#63b3ed; }
+
+    /* Checklist */
+    .checklist { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:0.5rem; margin:0.5rem 0; }
+    .chk-item { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.45rem 0.7rem; font-size:0.78rem; color:rgba(255,255,255,0.6); display:flex; align-items:center; justify-content:space-between; gap:0.4rem; }
+    .chk-item select { background:transparent; border:none; color:#fff; font-size:0.78rem; font-weight:700; cursor:pointer; outline:none; }
+    .chk-item select option { background:#1e1e35; }
+
+    /* Action buttons */
+    .pcard-actions { display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:0.25rem; }
+    .btn-approve    { background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.4rem 1rem; font-size:0.83rem; font-weight:700; cursor:pointer; transition:0.2s; }
+    .btn-approve:hover { background:rgba(16,185,129,0.28); }
+    .btn-reject     { background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.4rem 1rem; font-size:0.83rem; font-weight:700; cursor:pointer; transition:0.2s; }
+    .btn-reject:hover { background:rgba(239,68,68,0.25); }
+    .btn-correction { background:rgba(99,179,237,0.12); color:#63b3ed; border:1px solid rgba(99,179,237,0.3); border-radius:8px; padding:0.4rem 1rem; font-size:0.83rem; font-weight:700; cursor:pointer; transition:0.2s; }
+    .btn-correction:hover { background:rgba(99,179,237,0.25); }
+
+    /* Modal */
+    .mod-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:1000; display:none; align-items:center; justify-content:center; padding:1rem; }
+    .mod-overlay.open { display:flex; }
+    .mod-modal { background:#1e1e35; border:1px solid rgba(255,255,255,0.1); border-radius:18px; padding:2rem; width:100%; max-width:480px; box-shadow:0 24px 64px rgba(0,0,0,0.5); }
+    .mod-modal h3 { color:#fff; font-size:1.1rem; margin-bottom:1.25rem; }
+    .mod-modal label { color:rgba(255,255,255,0.55); font-size:0.82rem; display:block; margin-bottom:0.35rem; }
+    .mod-modal select, .mod-modal textarea { width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; padding:0.6rem 0.8rem; font-size:0.88rem; font-family:inherit; outline:none; margin-bottom:1rem; }
+    .mod-modal select option { background:#1e1e35; }
+    .mod-modal textarea { resize:vertical; min-height:80px; }
+    .mod-modal-btns { display:flex; gap:0.75rem; justify-content:flex-end; }
+    .btn-modal-cancel { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:0.5rem 1.1rem; font-size:0.85rem; font-weight:600; cursor:pointer; }
+    .btn-modal-submit { background:#6c63ff; color:#fff; border:none; border-radius:8px; padding:0.5rem 1.3rem; font-size:0.85rem; font-weight:700; cursor:pointer; transition:0.2s; }
+    .btn-modal-submit:hover { opacity:0.88; }
+
+    .empty-pending { text-align:center; padding:4rem 2rem; color:rgba(255,255,255,0.25); }
+    .empty-pending .ep-icon { font-size:3rem; margin-bottom:0.75rem; }
+
+    .admin-toast { position:fixed; bottom:2rem; right:2rem; z-index:9999; padding:0.75rem 1.25rem; border-radius:10px; font-size:0.88rem; font-weight:600; color:#fff; box-shadow:0 8px 24px rgba(0,0,0,0.3); opacity:0; transform:translateY(8px); transition:all 0.25s; pointer-events:none; }
+    .admin-toast.show { opacity:1; transform:translateY(0); }
+
+    @media (max-width:700px) {
+      .admin-layout { grid-template-columns:1fr; }
+      .admin-sidebar { display:flex; overflow-x:auto; padding:0; border-right:none; border-bottom:1px solid rgba(255,255,255,0.06); }
+      .sidebar-item { border-left:none; border-bottom:3px solid transparent; white-space:nowrap; }
+      .sidebar-item.active { border-left:none; border-bottom-color:var(--primary); }
+      #add-admin-form { grid-template-columns:1fr !important; }
+      .pending-card { grid-template-columns:1fr; }
+      .pcard-img { width:100%; height:180px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Admin Navbar -->
+  <nav class="admin-nav">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <div class="logo">Campus<span>Mart</span></div>
+      <span class="admin-badge-nav">Admin</span>
+    </div>
+    <div class="nav-right">
+      <span class="admin-name" id="admin-name">Admin</span>
+      <button class="btn btn-danger" onclick="adminLogout()" style="padding:0.35rem 0.85rem;font-size:0.82rem;">Logout</button>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+      <div class="sidebar-item active" onclick="showSection(event,'dashboard')">
+        <span class="si-icon si-dashboard"></span> Dashboard
+      </div>
+      <div class="sidebar-item" onclick="showSection(event,'pending')">
+        <span class="si-icon si-pending"></span> Pending Items
+        <span class="pending-badge" id="pending-count-badge" style="display:none"></span>
+      </div>
+      <div class="sidebar-item" onclick="showSection(event,'items')">
+        <span class="si-icon si-items"></span> Items
+      </div>
+      <div class="sidebar-item" onclick="showSection(event,'users')">
+        <span class="si-icon si-users"></span> Users
+      </div>
+      <div class="sidebar-item" onclick="showSection(event,'admins')">
+        <span class="si-icon si-admins"></span> Admins
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="admin-main">
+
+      <!-- Dashboard -->
+      <div class="admin-section active" id="section-dashboard">
+        <div class="section-header">
+          <div><h2>Dashboard</h2><p>Overview of CampusMart activity</p></div>
+          <button class="btn-refresh" onclick="loadStats()">&#8635; Refresh</button>
+        </div>
+        <div class="admin-stats">
+          <div class="admin-stat"><div class="as-icon">&#128101;</div><div class="as-num" id="stat-users">-</div><div class="as-label">Total Users</div></div>
+          <div class="admin-stat"><div class="as-icon">&#128230;</div><div class="as-num" id="stat-items">-</div><div class="as-label">Total Items</div></div>
+          <div class="admin-stat"><div class="as-icon">&#9989;</div><div class="as-num" id="stat-sold">-</div><div class="as-label">Sold Items</div></div>
+          <div class="admin-stat"><div class="as-icon">&#128336;</div><div class="as-num" id="stat-pending">-</div><div class="as-label">Pending Review</div></div>
+        </div>
+        <div class="section-header" style="margin-top:1rem;">
+          <div><h2 style="font-size:1rem;">Recent Listings</h2></div>
+        </div>
+        <div class="admin-table-wrap">
+          <table>
+            <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Mod Status</th><th>Listed</th></tr></thead>
+            <tbody id="recent-items-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pending Items -->
+      <div class="admin-section" id="section-pending">
+        <div class="section-header">
+          <div><h2>Pending Items</h2><p>Review and moderate student submissions</p></div>
+          <button class="btn-refresh" onclick="loadPendingItems()">&#8635; Refresh</button>
+        </div>
+        <div id="pending-container">
+          <div class="empty-pending"><div class="ep-icon">&#9203;</div><p>Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="admin-section" id="section-items">
+        <div class="section-header">
+          <div><h2>All Items</h2><p>Manage listed items</p></div>
+          <button class="btn-refresh" onclick="loadItems()">&#8635; Refresh</button>
+        </div>
+        <div class="admin-table-wrap">
+          <input class="admin-search" id="item-search" placeholder="Search items..." oninput="filterTable('items-body',this.value,[1,2,3])" />
+          <table>
+            <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Condition</th><th>Seller</th><th>Mod Status</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody id="items-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Users -->
+      <div class="admin-section" id="section-users">
+        <div class="section-header">
+          <div><h2>All Users</h2><p>Registered student accounts</p></div>
+          <button class="btn-refresh" onclick="loadUsers()">&#8635; Refresh</button>
+        </div>
+        <div class="admin-table-wrap">
+          <input class="admin-search" id="user-search" placeholder="Search users..." oninput="filterTable('users-body',this.value,[0,1])" />
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Action</th></tr></thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admins -->
+      <div class="admin-section" id="section-admins">
+        <div class="section-header">
+          <div><h2>Admin Accounts</h2><p>Manage admin users</p></div>
+          <button class="btn-refresh" onclick="loadAdmins()">&#8635; Refresh</button>
+        </div>
+        <div style="background:#1e1e35;border-radius:14px;padding:1.5rem;border:1px solid rgba(255,255,255,0.07);margin-bottom:1.5rem;">
+          <h3 style="color:#fff;font-size:1rem;margin-bottom:1rem;">Add New Admin</h3>
+          <div id="admin-add-alert" class="alert" style="margin-bottom:0.75rem;"></div>
+          <form id="add-admin-form" onsubmit="addAdmin(event)" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.75rem;align-items:end;">
+            <div class="form-group" style="margin:0;">
+              <label style="color:rgba(255,255,255,0.5);font-size:0.8rem;">Full Name</label>
+              <input type="text" id="new-admin-name" placeholder="Admin name" required style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:#fff;" />
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label style="color:rgba(255,255,255,0.5);font-size:0.8rem;">Email</label>
+              <input type="email" id="new-admin-email" placeholder="admin@example.com" required style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:#fff;" />
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label style="color:rgba(255,255,255,0.5);font-size:0.8rem;">Password</label>
+              <input type="password" id="new-admin-password" placeholder="Min. 6 characters" required style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:#fff;" />
+            </div>
+            <button type="submit" id="add-admin-btn" class="btn btn-primary" style="padding:0.6rem 1.2rem;white-space:nowrap;">Add Admin</button>
+          </form>
+        </div>
+        <div class="admin-table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Added</th></tr></thead>
+            <tbody id="admins-body"><tr class="empty-row"><td colspan="3">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /admin-main -->
+  </div><!-- /admin-layout -->
+
+  <!-- Reject / Needs Correction Modal -->
+  <div class="mod-overlay" id="mod-overlay">
+    <div class="mod-modal">
+      <h3 id="mod-modal-title">Reject Item</h3>
+      <label>Reason *</label>
+      <select id="mod-reason">
+        <option value="">-- Select a reason --</option>
+        <option value="Price unrealistic">Price unrealistic</option>
+        <option value="Image not clear">Image not clear</option>
+        <option value="Incomplete description">Incomplete description</option>
+        <option value="Duplicate item">Duplicate item</option>
+        <option value="Not allowed category">Not allowed category</option>
+        <option value="Damaged product">Damaged product</option>
+        <option value="Other">Other</option>
+      </select>
+      <label>Admin Comment (optional)</label>
+      <textarea id="mod-comment" placeholder="Add a helpful note for the student..."></textarea>
+      <div class="mod-modal-btns">
+        <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-modal-submit" id="mod-submit-btn" onclick="submitModal()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="admin-toast" id="admin-toast"></div>
+
+  <script>
+    const API = "http://localhost:3000";
+
+    const adminData = JSON.parse(localStorage.getItem("campusmart_admin") || "null");
+    if (!adminData || !adminData.token) window.location.href = "admin-login.html";
+    document.getElementById("admin-name").textContent = adminData.name;
+
+    function adminLogout() {
+      localStorage.removeItem("campusmart_admin");
+      window.location.href = "admin-login.html";
+    }
+
+    function headers() {
+      return { "Content-Type": "application/json", "Authorization": "Bearer " + adminData.token, "x-admin-token": adminData.token };
+    }
+
+    function showSection(e, name) {
+      document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".sidebar-item").forEach(s => s.classList.remove("active"));
+      document.getElementById("section-" + name).classList.add("active");
+      e.currentTarget.classList.add("active");
+      if (name === "dashboard") { loadStats(); loadRecentItems(); }
+      if (name === "pending")   loadPendingItems();
+      if (name === "items")     loadItems();
+      if (name === "users")     loadUsers();
+      if (name === "admins")    loadAdmins();
+    }
+
+    // -- Stats --
+    async function loadStats() {
+      try {
+        const res  = await fetch(API + "/admin/stats", { headers: headers() });
+        const data = await res.json();
+        if (!res.ok) { handleAuthError(res.status); return; }
+        document.getElementById("stat-users").textContent   = data.totalUsers;
+        document.getElementById("stat-items").textContent   = data.totalItems;
+        document.getElementById("stat-sold").textContent    = data.soldItems;
+        // Load pending count separately
+        loadPendingCount();
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadPendingCount() {
+      try {
+        const res  = await fetch(API + "/admin/pending-items", { headers: headers() });
+        const data = await res.json();
+        if (!res.ok) return;
+        const n = data.items.length;
+        document.getElementById("stat-pending").textContent = n;
+        const badge = document.getElementById("pending-count-badge");
+        if (n > 0) { badge.textContent = n; badge.style.display = "inline-block"; }
+        else badge.style.display = "none";
+      } catch(e) {}
+    }
+
+    async function loadRecentItems() {
+      try {
+        const res  = await fetch(API + "/admin/items", { headers: headers() });
+        const data = await res.json();
+        if (!res.ok) return;
+        const tbody = document.getElementById("recent-items-body");
+        const items = data.items.slice(0, 8);
+        if (!items.length) { tbody.innerHTML = "<tr class=\"empty-row\"><td colspan=\"5\">No items yet.</td></tr>"; return; }
+        tbody.innerHTML = items.map(item => `
+          <tr>
+            <td><div class="item-name-cell">
+              <div class="item-thumb">${item.image ? `<img src="${API}/uploads/${item.image}" onerror="this.style.display='none'" />` : catIcon(item.category)}</div>
+              <span>${esc(item.name)}</span>
+            </div></td>
+            <td>${esc(item.category)}</td>
+            <td>Rs.${Number(item.price).toLocaleString()}</td>
+            <td>${modBadge(item.status)}</td>
+            <td class="td-date">${fmtDate(item.createdAt)}</td>
+          </tr>`).join("");
+      } catch(e) { console.error(e); }
+    }
+
+    // -- Pending Items --
+    async function loadPendingItems() {
+      const container = document.getElementById("pending-container");
+      container.innerHTML = "<div class=\"empty-pending\"><div class=\"ep-icon\">&#9203;</div><p>Loading...</p></div>";
+      try {
+        const res  = await fetch(API + "/admin/pending-items", { headers: headers() });
+        const data = await res.json();
+        if (!res.ok) { handleAuthError(res.status); return; }
+        const badge = document.getElementById("pending-count-badge");
+        if (data.items.length > 0) { badge.textContent = data.items.length; badge.style.display = "inline-block"; }
+        else badge.style.display = "none";
+        if (!data.items.length) {
+          container.innerHTML = "<div class=\"empty-pending\"><div class=\"ep-icon\">&#9989;</div><p>No items pending review. All caught up!</p></div>";
+          return;
+        }
+        container.innerHTML = data.items.map(item => buildPendingCard(item)).join("");
+      } catch(e) { container.innerHTML = "<div class=\"empty-pending\"><div class=\"ep-icon\">&#9888;</div><p>Failed to load items.</p></div>"; }
+    }
+
+    function buildPendingCard(item) {
+      const imgHtml = item.image
+        ? `<img src="${API}/uploads/${item.image}" onerror="this.style.display='none'" />`
+        : catIcon(item.category);
+      const priceHtml = item.deal_type === "exchange"
+        ? `<span>Exchange: ${esc(item.exchange_for || "-")}</span>`
+        : `<span>Rs.${Number(item.price).toLocaleString()}</span>`;
+      const feedbackHtml = (item.status === "Needs Correction" && item.rejection_reason)
+        ? `<div class="pcard-feedback"><strong>Previous feedback:</strong> ${esc(item.rejection_reason)}${item.admin_comment ? " - " + esc(item.admin_comment) : ""}</div>`
+        : "";
+      return `<div class="pending-card" id="pcard-${item._id}">
+        <div class="pcard-img">${imgHtml}</div>
+        <div class="pcard-body">
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+            <span class="pcard-title">${esc(item.name)}</span>
+            ${modBadge(item.status)}
+          </div>
+          <div class="pcard-meta">
+            <span>${esc(item.category)}</span>
+            <span>${esc(item.subject)}</span>
+            <span>&#127991; ${esc(item.condition)}</span>
+            ${priceHtml}
+            <span>${esc(item.sellerEmail)}</span>
+          </div>
+          ${item.description ? `<div class="pcard-desc">${esc(item.description)}</div>` : ""}
+          ${feedbackHtml}
+          <div class="checklist">
+            <div class="chk-item">Image clarity <select id="chk-img-${item._id}"><option value="good">Good</option><option value="bad">Bad</option></select></div>
+            <div class="chk-item">Price reasonable <select id="chk-price-${item._id}"><option value="yes">Yes</option><option value="no">No</option></select></div>
+            <div class="chk-item">Description complete <select id="chk-desc-${item._id}"><option value="yes">Yes</option><option value="no">No</option></select></div>
+            <div class="chk-item">Category correct <select id="chk-cat-${item._id}"><option value="yes">Yes</option><option value="no">No</option></select></div>
+            <div class="chk-item">Condition acceptable <select id="chk-cond-${item._id}"><option value="yes">Yes</option><option value="no">No</option></select></div>
+          </div>
+          <div class="pcard-actions">
+            <button class="btn-approve" onclick="approveItem('${item._id}')">Approve</button>
+            <button class="btn-correction" onclick="openModal('${item._id}','correction')">Needs Correction</button>
+            <button class="btn-reject" onclick="openModal('${item._id}','reject')">Reject</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    async function approveItem(id) {
+      if (!confirm("Approve this item? It will become visible to buyers.")) return;
+      try {
+        const res  = await fetch(API + "/admin/items/" + id + "/approve", { method: "PUT", headers: headers() });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error); return; }
+        document.getElementById("pcard-" + id)?.remove();
+        refreshPendingBadge();
+        showToast("Item approved and now visible to buyers!", "success");
+      } catch { alert("Network error."); }
+    }
+
+    let _modalItemId = null, _modalAction = null;
+
+    function openModal(id, action) {
+      _modalItemId = id; _modalAction = action;
+      const isReject = action === "reject";
+      document.getElementById("mod-modal-title").textContent = isReject ? "Reject Item" : "Request Correction";
+      const btn = document.getElementById("mod-submit-btn");
+      btn.textContent = isReject ? "Reject Item" : "Send for Correction";
+      btn.style.background = isReject ? "#ef4444" : "#63b3ed";
+      document.getElementById("mod-reason").value  = "";
+      document.getElementById("mod-comment").value = "";
+      document.getElementById("mod-overlay").classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("mod-overlay").classList.remove("open");
+      _modalItemId = null; _modalAction = null;
+    }
+
+    async function submitModal() {
+      const reason  = document.getElementById("mod-reason").value;
+      const comment = document.getElementById("mod-comment").value.trim();
+      if (!reason) { alert("Please select a reason."); return; }
+      const endpoint = _modalAction === "reject"
+        ? API + "/admin/items/" + _modalItemId + "/reject"
+        : API + "/admin/items/" + _modalItemId + "/needs-correction";
+      try {
+        const res  = await fetch(endpoint, { method: "PUT", headers: headers(), body: JSON.stringify({ rejection_reason: reason, admin_comment: comment }) });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error); return; }
+        const id = _modalItemId;
+        closeModal();
+        document.getElementById("pcard-" + id)?.remove();
+        refreshPendingBadge();
+        showToast(_modalAction === "reject" ? "Item rejected." : "Item sent back for correction.", _modalAction === "reject" ? "error" : "info");
+      } catch { alert("Network error."); }
+    }
+
+    function refreshPendingBadge() {
+      const remaining = document.querySelectorAll("[id^=\"pcard-\"]").length;
+      const badge = document.getElementById("pending-count-badge");
+      document.getElementById("stat-pending").textContent = remaining;
+      if (remaining > 0) { badge.textContent = remaining; badge.style.display = "inline-block"; }
+      else { badge.style.display = "none"; }
+      if (remaining === 0) {
+        document.getElementById("pending-container").innerHTML =
+          "<div class=\"empty-pending\"><div class=\"ep-icon\">&#9989;</div><p>No items pending review. All caught up!</p></div>";
+      }
+    }
+
+    // -- Items --
+    async function loadItems() {
+      try {
+        const res  = await fetch(API + "/admin/items", { headers: headers() });
+        const data = await res.json();
+        if (!res.ok) { handleAuthError(res.status); return; }
+        const tbody = document.getElementById("items-body");
+        if (!data.items.length) { tbody.innerHTML = "<tr class=\"empty-row\"><td colspan=\"8\">No items found.</td></tr>"; return; }
+        tbody.innerHTML = data.items.map(item => `
+          <tr id="item-row-${item._id}">
+            <td><div class="item-name-cell">
+              <div class="item-thumb">${item.image ? `<img src="${API}/uploads/${item.image}" onerror="this.style.display='none'" />` : catIcon(item.category)}</div>
+              <span>${esc(item.name)}</span>
+            </div></td>
+            <td>${esc(item.category)}</td>
+            <td>Rs.${Number(item.price).toLocaleString()}</td>
+            <td><span class="badge badge-${(item.condition||"").toLowerCase()}">${esc(item.condition)}</span></td>
+            <td class="td-email">${esc(item.sellerEmail || "-")}</td>
+            <td>${modBadge(item.status)}</td>
+            <td class="td-date">${fmtDate(item.createdAt)}</td>
+            <td><button class="btn-del" onclick="deleteItem('${item._id}')">Delete</button></td>
+          </tr>`).join("");
+      } catch(e) { console.error(e); }
+    }
+
+    async function deleteItem(id) {
+      if (!confirm("Delete this item? This cannot be undone.")) return;
+      try {
+        const res  = await fetch(API + "/admin/items/" + id, { method: "DELETE", headers: headers() });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error); return; }
+        document.getElementById("item-row-" + id)?.remove();
+        loadStats();
+      } catch { alert("Network error."); }
+    }
+
+    // -- Users --
+    async function loadUsers() {
+      try {
+        const res  = await fetch(API + "/admin/users", { headers: headers() });
+        const data = await res.json();
+        if (!res.ok) { handleAuthError(res.status); return; }
+        const tbody = document.getElementById("users-body");
+        if (!data.users.length) { tbody.innerHTML = "<tr class=\"empty-row\"><td colspan=\"4\">No users found.</td></tr>"; return; }
+        tbody.innerHTML = data.users.map(u => `
+          <tr id="user-row-${u._id}">
+            <td><strong>${esc(u.name)}</strong></td>
+            <td class="td-email">${esc(u.email)}</td>
+            <td class="td-date">${fmtDate(u.createdAt)}</td>
+            <td><button class="btn-del" onclick="deleteUser('${u._id}')">Delete</button></td>
+          </tr>`).join("");
+      } catch(e) { console.error(e); }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm("Delete this user AND all their items?")) return;
+      try {
+        const res  = await fetch(API + "/admin/users/" + id, { method: "DELETE", headers: headers() });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error); return; }
+        document.getElementById("user-row-" + id)?.remove();
+        loadStats();
+      } catch { alert("Network error."); }
+    }
+
+    // -- Admins --
+    async function loadAdmins() {
+      try {
+        const res  = await fetch(API + "/admin/admins", { headers: headers() });
+        const data = await res.json();
+        if (!res.ok) { handleAuthError(res.status); return; }
+        const tbody = document.getElementById("admins-body");
+        if (!data.admins.length) { tbody.innerHTML = "<tr class=\"empty-row\"><td colspan=\"3\">No admins found.</td></tr>"; return; }
+        tbody.innerHTML = data.admins.map(a => `
+          <tr>
+            <td><strong>${esc(a.name)}</strong></td>
+            <td class="td-email">${esc(a.email)}</td>
+            <td class="td-date">${fmtDate(a.createdAt)}</td>
+          </tr>`).join("");
+      } catch(e) { console.error(e); }
+    }
+
+    async function addAdmin(e) {
+      e.preventDefault();
+      const btn = document.getElementById("add-admin-btn");
+      btn.disabled = true; btn.textContent = "Adding...";
+      const alertEl = document.getElementById("admin-add-alert");
+      alertEl.className = "alert";
+      try {
+        const res = await fetch(API + "/api/admin/register", {
+          method: "POST", headers: headers(),
+          body: JSON.stringify({
+            name:     document.getElementById("new-admin-name").value.trim(),
+            email:    document.getElementById("new-admin-email").value.trim(),
+            password: document.getElementById("new-admin-password").value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) { alertEl.className = "alert alert-error show"; alertEl.textContent = data.error || "Failed."; }
+        else { alertEl.className = "alert alert-success show"; alertEl.textContent = "Admin added successfully."; document.getElementById("add-admin-form").reset(); loadAdmins(); }
+      } catch { alertEl.className = "alert alert-error show"; alertEl.textContent = "Network error."; }
+      finally { btn.disabled = false; btn.textContent = "Add Admin"; }
+    }
+
+    // -- Helpers --
+    function filterTable(tbodyId, query, cols) {
+      const q = query.toLowerCase();
+      document.querySelectorAll("#" + tbodyId + " tr").forEach(row => {
+        const text = cols.map(c => (row.cells[c]?.textContent || "")).join(" ").toLowerCase();
+        row.style.display = text.includes(q) ? "" : "none";
+      });
+    }
+
+    function esc(str) { const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML; }
+    function fmtDate(iso) { if (!iso) return "-"; return new Date(iso).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }); }
+    function catIcon(cat) { return { Books:"&#128218;", Notes:"&#128221;", "Lab Materials":"&#128300;" }[cat] || "&#128230;"; }
+    function modBadge(status) {
+      const map = { "Pending":"mod-pending", "Approved":"mod-approved", "Rejected":"mod-rejected", "Needs Correction":"mod-correction" };
+      return `<span class="mod-badge ${map[status] || "mod-pending"}">${status || "Pending"}</span>`;
+    }
+    function handleAuthError(status) { if (status === 401) { alert("Session expired."); adminLogout(); } }
+
+    function showToast(msg, type) {
+      const t = document.getElementById("admin-toast");
+      t.textContent = msg;
+      t.style.background = type === "success" ? "#10b981" : type === "error" ? "#ef4444" : "#63b3ed";
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 3000);
+    }
+
+    // Close modal on overlay click
+    document.getElementById("mod-overlay").addEventListener("click", function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // Init
+    loadStats();
+    loadRecentItems();
+    loadPendingCount();
+  </script>
+</body>
+</html>
