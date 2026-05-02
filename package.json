@@ -1,0 +1,17 @@
+{
+  "name": "campus-mart",
+  "version": "1.0.0",
+  "description": "College student-to-student marketplace with real-time chat",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "cd backend && npm install && npm start",
+    "dev": "cd backend && npm start",
+    "install-backend": "cd backend && npm install"
+  },
+  "keywords": ["marketplace", "college", "student", "chat", "socket.io"],
+  "author": "Suba Darsini",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
