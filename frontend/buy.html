@@ -404,7 +404,8 @@
           actions = '<button class="btn-contact btn-chat-seller" onclick="messageSeller(event,\'' + item._id + '\')">💬 Message Seller</button>';
         }
 
-        return '<div class="mc-card ' + (isSold ? 'mc-sold' : '') + '" id="card-' + item._id + '">'
+        return '<div class="mc-card ' + (isSold ? 'mc-sold' : '') + '" id="card-' + item._id + '" onclick="viewProduct(''' + item._id + ''')' + '">'
+
           + '<div class="mc-img-wrap">'
             + mainImgHtml
             + '<span class="mc-category-badge">' + esc(item.category) + '</span>'
@@ -418,7 +419,7 @@
             + '<div class="mc-subject">📖 ' + esc(item.subject) + '</div>'
             + (item.description ? '<p class="mc-desc">' + esc(item.description.substring(0,80)) + (item.description.length>80?'…':'') + '</p>' : '')
             + '<div class="mc-footer">' + priceBadge + '</div>'
-            + '<div class="item-actions">' + actions + '</div>'
+            + '<div class="item-actions" onclick="event.stopPropagation()">' + actions + '</div>'
           + '</div>'
           + '</div>';
       }).join('');
@@ -509,6 +510,10 @@
       } catch(e) { alert('Network error.'); btn.disabled=false; btn.textContent='Mark as Sold'; }
     }
 
+    function viewProduct(itemId) {
+      window.location.href = 'product-details.html?id=' + encodeURIComponent(itemId);
+    }
+
     function esc(str) {
       const d = document.createElement('div');
       d.textContent = str || '';
@@ -519,3 +524,4 @@
   </script>
 </body>
 </html>
+
