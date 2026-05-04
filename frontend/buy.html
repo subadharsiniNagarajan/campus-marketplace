@@ -401,10 +401,7 @@
           actions = '<div class="own-listing-badge">📌 Your Listing</div>'
             + '<button class="btn-mark-sold" onclick="markSold(\'' + item._id + '\',this)">Mark as Sold</button>';
         } else {
-          const chatUrl = 'chat.html?itemId=' + item._id
-            + '&otherEmail=' + encodeURIComponent(item.sellerEmail || '')
-            + '&itemName='   + encodeURIComponent(item.name);
-          actions = '<a href="' + chatUrl + '" class="btn-contact btn-chat-seller">💬 Message Seller</a>';
+          actions = '<button class="btn-contact btn-chat-seller" onclick="messageSeller(event,\'' + item._id + '\')">💬 Message Seller</button>';
         }
 
         return '<div class="mc-card ' + (isSold ? 'mc-sold' : '') + '" id="card-' + item._id + '">'
@@ -425,6 +422,66 @@
           + '</div>'
           + '</div>';
       }).join('');
+    }
+
+    async function messageSeller(e, itemId) {
+      e.preventDefault();
+      var btn = e.currentTarget;
+      var orig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Opening...';
+
+      // Get item from already-loaded data
+      var item = allItems.find(function(i) { return i._id === itemId; });
+      if (!item) {
+        alert('Item not found. Please refresh the page.');
+        btn.disabled = false; btn.textContent = orig; return;
+      }
+
+      var itemImage  = (item.images && item.images[0]) || item.image || '';
+      var sellerEmail = (item.sellerEmail || '').toLowerCase().trim();
+      var sellerName  = sellerEmail;
+
+      // Always call /api/chat/open — it resolves seller even for old items without sellerEmail
+      try {
+        var r = await fetch(API + '/api/chat/open', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: itemId, buyerEmail: user.email })
+        });
+        var d = await r.json();
+        if (r.ok && d.success) {
+          sellerEmail = d.sellerEmail || sellerEmail;
+          sellerName  = d.sellerName  || sellerEmail;
+          itemImage   = d.itemImage   || itemImage;
+        } else if (d.error) {
+          // Server returned a specific error (e.g. own listing)
+          alert(d.error);
+          btn.disabled = false; btn.textContent = orig; return;
+        }
+      } catch(err) {
+        console.warn('[messageSeller] /api/chat/open failed:', err.message);
+        // Fall through — use whatever sellerEmail we have from item data
+      }
+
+      if (!sellerEmail) {
+        alert('Could not find seller for this item. Please try again later.');
+        btn.disabled = false; btn.textContent = orig; return;
+      }
+
+      if (sellerEmail === user.email.toLowerCase()) {
+        alert('This is your own listing.');
+        btn.disabled = false; btn.textContent = orig; return;
+      }
+
+      var url = 'chat.html'
+        + '?itemId='     + encodeURIComponent(item._id)
+        + '&otherEmail=' + encodeURIComponent(sellerEmail)
+        + '&otherName='  + encodeURIComponent(sellerName)
+        + '&itemName='   + encodeURIComponent(item.name)
+        + '&itemImage='  + encodeURIComponent(itemImage);
+
+      window.location.href = url;
     }
 
     async function markSold(itemId, btn) {

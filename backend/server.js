@@ -22,7 +22,16 @@ app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, '../frontend')));
+// No-cache for HTML files so browser always gets the latest version
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  setHeaders: function(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
@@ -95,7 +104,8 @@ const messageSchema = new mongoose.Schema({
   senderEmail:   { type: String, required: true, lowercase: true },
   receiverEmail: { type: String, required: true, lowercase: true },
   senderName:    { type: String, required: true },
-  text:          { type: String, required: true, maxlength: 1000 }
+  text:          { type: String, default: '', maxlength: 1000 },
+  imageUrl:      { type: String, default: '' }
 }, { timestamps: true });
 
 // Index for fast private-thread lookup
@@ -211,7 +221,7 @@ app.post('/addItem', upload.array('images', 7), async (req, res) => {
         return res.status(400).json({ error: 'Price must be a non-negative number for sell listings.' });
     }
 
-    // Support up to 7 uploaded images — validate each
+    // Support up to 7 uploaded images ï¿½ validate each
     const imageFiles = req.files || [];
     if (imageFiles.length > 7)
       return res.status(400).json({ error: 'Maximum 7 images allowed per item.' });
@@ -242,7 +252,7 @@ app.post('/addItem', upload.array('images', 7), async (req, res) => {
   }
 });
 
-// GET /items — supports: search, category, minPrice, maxPrice, department, deal_type
+// GET /items ï¿½ supports: search, category, minPrice, maxPrice, department, deal_type
 app.get('/items', async (req, res) => {
   try {
     const { category, search, minPrice, maxPrice, department, deal_type } = req.query;
@@ -598,7 +608,7 @@ app.get('/chat/threads', async (req, res) => {
     const threads = [];
     for (const t of seen.values()) {
       const [item, otherUser] = await Promise.all([
-        Item.findById(t.itemId).select('name sellerEmail').lean(),
+        Item.findById(t.itemId).select('name image sellerEmail').lean(),
         User.findOne({ email: t.otherEmail }).select('name').lean()
       ]);
 
@@ -688,7 +698,7 @@ async function handleAdminLogin(req, res) {
 app.post('/admin/login',        handleAdminLogin);
 app.post('/api/admin/login',    handleAdminLogin);
 
-// GET /admin/admins — list all admin accounts (requires auth)
+// GET /admin/admins ï¿½ list all admin accounts (requires auth)
 app.get('/admin/admins', adminAuth, async (req, res) => {
   try {
     const admins = await Admin.find().select('-password').sort({ createdAt: 1 });
@@ -791,11 +801,13 @@ app.delete('/admin/messages/:id', adminAuth, async (req, res) => {
 // POST /api/messages â€” send a message (REST, also emits via socket)
 app.post('/api/messages', async (req, res) => {
   try {
-    const { itemId, senderEmail, receiverEmail, senderName, text } = req.body;
+    const { itemId, senderEmail, receiverEmail, senderName, text, imageUrl } = req.body;
     console.log('[POST /api/messages] send:', { senderEmail, receiverEmail, itemId });
 
-    if (!itemId || !senderEmail || !receiverEmail || !senderName || !text)
-      return res.status(400).json({ error: 'All fields are required.' });
+    if (!itemId || !senderEmail || !receiverEmail || !senderName)
+      return res.status(400).json({ error: 'itemId, senderEmail, receiverEmail and senderName are required.' });
+    if (!text && !imageUrl)
+      return res.status(400).json({ error: 'Message must have text or an image.' });
     if (senderEmail.toLowerCase() === receiverEmail.toLowerCase())
       return res.status(400).json({ error: 'Cannot message yourself.' });
     if (!mongoose.Types.ObjectId.isValid(itemId))
@@ -809,7 +821,8 @@ app.post('/api/messages', async (req, res) => {
       senderEmail:   senderEmail.toLowerCase(),
       receiverEmail: receiverEmail.toLowerCase(),
       senderName,
-      text: text.trim()
+      text:     text     ? text.trim() : '',
+      imageUrl: imageUrl ? imageUrl    : ''
     });
 
     console.log('[POST /api/messages] saved to MongoDB:', msg._id);
@@ -858,6 +871,81 @@ app.get('/api/messages/:itemId', async (req, res) => {
   } catch (err) {
     console.error('[GET /api/messages] error:', err);
     res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+
+// POST /api/chat/open
+// Called by "Message Seller". Looks up seller from DB and returns chat context.
+// Handles old items where sellerEmail is missing by falling back to user_id lookup.
+app.post('/api/chat/open', async (req, res) => {
+  try {
+    const { itemId, buyerEmail } = req.body;
+    if (!itemId || !buyerEmail)
+      return res.status(400).json({ error: 'itemId and buyerEmail are required.' });
+    if (!mongoose.Types.ObjectId.isValid(itemId))
+      return res.status(400).json({ error: 'Invalid item ID.' });
+
+    const buyer = await User.findOne({ email: buyerEmail.toLowerCase() });
+    if (!buyer) return res.status(401).json({ error: 'Not logged in.' });
+
+    const item = await Item.findById(itemId).lean();
+    if (!item) return res.status(404).json({ error: 'Item not found.' });
+
+    // Resolve seller â€” try sellerEmail first, then look up via user_id
+    let sellerEmail = (item.sellerEmail || '').toLowerCase().trim();
+    let seller = null;
+
+    if (!sellerEmail && item.user_id) {
+      // Old item: sellerEmail not stored, look up by user_id
+      seller = await User.findById(item.user_id).select('name email').lean();
+      if (seller) sellerEmail = seller.email.toLowerCase();
+    } else if (sellerEmail) {
+      seller = await User.findOne({ email: sellerEmail }).select('name email').lean();
+    }
+
+    if (!sellerEmail)
+      return res.status(400).json({ error: 'Could not find seller for this item.' });
+
+    if (sellerEmail === buyerEmail.toLowerCase())
+      return res.status(400).json({ error: 'This is your own listing.' });
+
+    // Also backfill sellerEmail on the item so future lookups are fast
+    if (!item.sellerEmail && sellerEmail) {
+      await Item.findByIdAndUpdate(itemId, { sellerEmail: sellerEmail });
+    }
+
+    res.json({
+      success:     true,
+      itemId:      item._id.toString(),
+      itemName:    item.name,
+      itemImage:   item.image || '',
+      sellerEmail: sellerEmail,
+      sellerName:  seller ? seller.name : sellerEmail
+    });
+  } catch (err) {
+    console.error('[/api/chat/open]', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+
+// POST /api/chat/upload-image â€” upload an image for a chat message
+app.post('/api/chat/upload-image', upload.single('image'), async (req, res) => {
+  try {
+    const { senderEmail } = req.body;
+    if (!req.file) return res.status(400).json({ error: 'No image uploaded.' });
+    if (!senderEmail) return res.status(400).json({ error: 'senderEmail is required.' });
+
+    const sender = await User.findOne({ email: senderEmail.toLowerCase() });
+    if (!sender) return res.status(401).json({ error: 'Not logged in.' });
+
+    const imageUrl = req.file.filename;
+    console.log('[/api/chat/upload-image] uploaded:', imageUrl, 'by:', senderEmail);
+    res.json({ success: true, imageUrl: imageUrl });
+  } catch (err) {
+    console.error('[/api/chat/upload-image]', err);
+    res.status(500).json({ error: 'Server error during image upload.' });
   }
 });
 

@@ -1,21 +1,99 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
-  // Auto-redirect from file:// to localhost:3000
   if (window.location.protocol === "file:") {
     var page = window.location.pathname.split("/").pop() || "index.html";
     window.location.replace("http://localhost:3000/" + page);
   }
-</script>
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chat – CampusMart</title>
+  <title>Chat - CampusMart</title>
   <link rel="stylesheet" href="style.css" />
   <script src="http://localhost:3000/socket.io/socket.io.js"></script>
-<style>.nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }</style>
+  <style>
+    .nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }
+    .socket-dot { display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:.5rem;vertical-align:middle;transition:background .3s; }
+    .socket-dot.connected    { background:#10b981;box-shadow:0 0 6px #10b981; }
+    .socket-dot.disconnected { background:#ef4444; }
+    .chat-day-label { text-align:center;font-size:.72rem;color:var(--text3);font-weight:600;margin:.5rem 0;position:relative; }
+    .chat-day-label::before,.chat-day-label::after { content:'';position:absolute;top:50%;width:30%;height:1px;background:var(--border); }
+    .chat-day-label::before { left:0; } .chat-day-label::after { right:0; }
+    .t-role { font-size:.78rem;font-weight:500;color:var(--p1); }
+    .item-ctx { display:flex;align-items:center;gap:.75rem;padding:.55rem 1rem;background:var(--bg2,#f8f9fa);border-bottom:1px solid var(--border,#e5e7eb);flex-shrink:0; }
+    .item-ctx-img { width:42px;height:42px;border-radius:8px;object-fit:cover;border:1px solid var(--border,#e5e7eb);flex-shrink:0; }
+    .item-ctx-ph  { width:42px;height:42px;border-radius:8px;background:var(--bg2,#f3f4f6);border:1px solid var(--border,#e5e7eb);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0; }
+    .item-ctx-info { display:flex;flex-direction:column;gap:.1rem;min-width:0; }
+    .item-ctx-label { font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3,#9ca3af); }
+    .item-ctx-title { font-size:.88rem;font-weight:700;color:var(--text,#111);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    /* attach popup */
+    .attach-popup { position:absolute; bottom:calc(100% + 6px); left:0; background:var(--card,#fff); border:1px solid var(--border,#e5e7eb); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.12); overflow:hidden; z-index:100; min-width:160px; }
+    .attach-popup button { display:flex; align-items:center; gap:.6rem; width:100%; padding:.7rem 1rem; background:none; border:none; cursor:pointer; font-size:.88rem; color:var(--text,#111); transition:background .15s; white-space:nowrap; }
+    .attach-popup button:hover { background:var(--bg2,#f3f4f6); }
+    .attach-popup button span.ap-icon { font-size:1.1rem; }
+    /* image preview overlay */
+    .img-preview-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:999; padding:1rem; }
+    .img-preview-box { background:var(--card,#fff); border-radius:16px; padding:1.25rem; max-width:360px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,.2); }
+    .img-preview-box img { width:100%; max-height:260px; object-fit:contain; border-radius:10px; border:1px solid var(--border,#e5e7eb); display:block; }
+    .img-preview-label { font-size:.78rem; color:var(--text3,#9ca3af); margin:.6rem 0 .9rem; text-align:center; }
+    .img-preview-actions { display:flex; gap:.6rem; }
+    .img-preview-actions button { flex:1; padding:.55rem; border-radius:8px; border:none; cursor:pointer; font-size:.88rem; font-weight:600; }
+    .btn-img-cancel { background:var(--bg2,#f3f4f6); color:var(--text,#111); }
+    .btn-img-send   { background:var(--p1,#6366f1); color:#fff; }
+    .btn-img-send:disabled { opacity:.6; cursor:not-allowed; }
+    /* image bubble */
+    .msg-img { max-width:220px; max-height:200px; border-radius:10px; display:block; cursor:pointer; border:1px solid rgba(0,0,0,.08); margin-bottom:.25rem; }
+    /* attach button */
+    .btn-attach { background:none; border:none; cursor:pointer; font-size:1.25rem; padding:.3rem .4rem; color:var(--text2,#6b7280); border-radius:8px; transition:background .15s; flex-shrink:0; line-height:1; }
+    .btn-attach:hover { background:var(--bg2,#f3f4f6); }
+    .chat-input-area { position:relative; }
+    /* webcam modal */
+    .webcam-overlay { position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem; }
+    .webcam-box { background:var(--card,#fff);border-radius:16px;padding:1.25rem;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.3); }
+    .webcam-box h3 { margin:0 0 .75rem;font-size:1rem;font-weight:700;color:var(--text,#111); }
+    .webcam-video { width:100%;border-radius:10px;background:#000;display:block;max-height:280px;object-fit:cover; }
+    .webcam-canvas { display:none; }
+    .webcam-actions { display:flex;gap:.6rem;margin-top:.85rem; }
+    .webcam-actions button { flex:1;padding:.6rem;border-radius:8px;border:none;cursor:pointer;font-size:.88rem;font-weight:600; }
+    .btn-wc-cancel  { background:var(--bg2,#f3f4f6);color:var(--text,#111); }
+    .btn-wc-capture { background:var(--p1,#6366f1);color:#fff; }
+    .btn-wc-capture:disabled { opacity:.5;cursor:not-allowed; }
+    .webcam-err { color:#dc2626;font-size:.82rem;margin-top:.5rem;text-align:center; }
+  </style>
 </head>
 <body>
+  <!-- Hidden file inputs for chat image attach (must be in DOM before scripts) -->
+  <input type="file" id="chat-img-camera"  accept="image/*" capture="environment" style="display:none" />
+  <input type="file" id="chat-img-gallery" accept="image/*" style="display:none" />
+
+  <!-- Image preview overlay -->
+  <div class="img-preview-overlay" id="img-preview-overlay" style="display:none">
+    <div class="img-preview-box">
+      <img id="img-preview-img" src="" alt="Preview" />
+      <div class="img-preview-label" id="img-preview-label">Ready to send</div>
+      <div class="img-preview-actions">
+        <button class="btn-img-cancel" id="btn-img-cancel">Cancel</button>
+        <button class="btn-img-change" id="btn-img-change" style="flex:0.7;background:var(--bg2,#f3f4f6);color:var(--text,#111);padding:.55rem;border-radius:8px;border:none;cursor:pointer;font-size:.88rem;font-weight:600;">Change</button>
+        <button class="btn-img-send"   id="btn-img-send">Send Image</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Webcam modal (desktop camera) -->
+  <div class="webcam-overlay" id="webcam-overlay" style="display:none">
+    <div class="webcam-box">
+      <h3>&#128247; Take a Photo</h3>
+      <video class="webcam-video" id="webcam-video" autoplay playsinline muted></video>
+      <canvas class="webcam-canvas" id="webcam-canvas"></canvas>
+      <div class="webcam-err" id="webcam-err" style="display:none"></div>
+      <div class="webcam-actions">
+        <button class="btn-wc-cancel"  id="btn-wc-cancel">Cancel</button>
+        <button class="btn-wc-capture" id="btn-wc-capture">&#128247; Capture Photo</button>
+      </div>
+    </div>
+  </div>
+
   <nav class="navbar">
     <div class="logo">Campus<span>Mart</span></div>
     <div class="nav-links">
@@ -33,26 +111,24 @@
 
   <div class="page-container">
     <div class="page-header">
-      <h2>💬 My Messages</h2>
+      <h2>&#128172; My Messages</h2>
       <p>Real-time private conversations with other students.</p>
     </div>
-
     <div class="chat-layout">
       <div class="threads-panel">
         <div class="threads-header">
-          💬 Conversations
+          &#128172; Conversations
           <span id="socket-status" class="socket-dot disconnected" title="Connecting..."></span>
         </div>
         <div class="threads-list" id="threads-list">
           <div class="no-threads">Loading...</div>
         </div>
       </div>
-
       <div class="chat-panel" id="chat-panel">
         <div class="chat-empty-state" id="chat-empty">
-          <div class="ce-icon">💬</div>
+          <div class="ce-icon">&#128172;</div>
           <strong>Select a conversation</strong>
-          <span style="font-size:0.85rem;">or start one from the Buy page</span>
+          <span style="font-size:0.85rem;">or click Message Seller on any item</span>
         </div>
       </div>
     </div>
@@ -61,281 +137,543 @@
   <script src="script.js"></script>
   <script>
     requireAuth();
-    const user = getUser();
-    document.getElementById('nav-username').textContent = user.name;
+    var user = getUser();
+    document.getElementById('nav-username').textContent    = user.name;
     document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
 
-    let activeThread = null;
-    let socket       = null;
+    var activeThread   = null;
+    var socket         = null;
+    var threadStore    = {};
+    var renderedMsgIds = new Set();
 
-    // Tracks every rendered message key so appendMessage() never renders the same message twice.
-    const renderedMsgIds = new Set();
+    var _p        = new URLSearchParams(window.location.search);
+    var URL_ITEM  = _p.get('itemId')    || '';
+    var URL_OTHER = _p.get('otherEmail')|| '';
+    var URL_ONAME = _p.get('otherName') || '';
+    var URL_NAME  = _p.get('itemName')  || 'Item';
+    var URL_IMAGE = _p.get('itemImage') || '';
 
-    function msgKey(m) {
-      return m._id ? String(m._id) : (m.senderEmail + '|' + m.text + '|' + m.createdAt);
-    }
-
-    // ── Socket ───────────────────────────────────────────────────────────────
     function initSocket() {
-      if (socket) return; // only ever create one socket
+      if (socket) return;
       socket = io(API, { transports: ['websocket', 'polling'] });
-
-      socket.on('connect', function () {
-        setSocketStatus(true);
-        if (activeThread) joinRoom(activeThread);
-      });
-
-      socket.on('disconnect', function () { setSocketStatus(false); });
-
-      socket.on('room_joined', function (d) {
-        console.log('[Socket] joined room:', d.room);
-      });
-
-      // Single listener — dedup is handled inside appendMessage()
-      socket.on('new_message', function (msg) { appendMessage(msg); });
-
-      socket.on('error', function (d) { console.error('[Socket] error:', d.message); });
+      socket.on('connect',     function() { setSocketStatus(true);  if (activeThread) joinRoom(activeThread); });
+      socket.on('disconnect',  function() { setSocketStatus(false); });
+      socket.on('room_joined', function(d) { console.log('[Socket] room:', d.room); });
+      socket.on('new_message', function(msg) { appendMessage(msg); });
+      socket.on('error',       function(d) { console.error('[Socket]', d.message); });
     }
 
-    function setSocketStatus(connected) {
+    function setSocketStatus(on) {
       var dot = document.getElementById('socket-status');
       if (!dot) return;
-      dot.className = 'socket-dot ' + (connected ? 'connected' : 'disconnected');
-      dot.title     = connected ? 'Connected — real-time' : 'Disconnected';
+      dot.className = 'socket-dot ' + (on ? 'connected' : 'disconnected');
+      dot.title     = on ? 'Connected' : 'Disconnected';
     }
 
-    function joinRoom(thread) {
-      if (!socket || !thread) return;
-      socket.emit('join_room', {
-        itemId:     thread.itemId,
-        myEmail:    user.email,
-        otherEmail: thread.otherEmail
-      });
+    function joinRoom(t) {
+      if (!socket || !t) return;
+      socket.emit('join_room', { itemId: t.itemId, myEmail: user.email, otherEmail: t.otherEmail });
     }
 
-    // ── Thread store (indexed by itemId__otherEmail for fast lookup) ─────────
-    var threadStore = {};
-
-    // ── Thread list ──────────────────────────────────────────────────────────
     async function loadThreads() {
+      var list = document.getElementById('threads-list');
       try {
         var res  = await fetch(API + '/chat/threads?myEmail=' + encodeURIComponent(user.email));
         var data = await res.json();
-        var list = document.getElementById('threads-list');
-
-        if (!data.success || !data.threads.length) {
-          list.innerHTML = '<div class="no-threads">No conversations yet.<br>Go to Buy page and message a seller.</div>';
-          // Still check URL params in case we arrived from buy page
-          var p = new URLSearchParams(window.location.search);
-          if (p.get('itemId') && p.get('otherEmail')) {
-            openThread(p.get('itemId'), p.get('otherEmail'), p.get('itemName') || 'Item', p.get('otherEmail'));
-          }
+        if (!data.success || !data.threads || !data.threads.length) {
+          list.innerHTML = '<div class="no-threads">No conversations yet.<br>Click Message Seller on any item.</div>';
           return;
         }
-
-        // Store threads by key for click handler
         threadStore = {};
-        data.threads.forEach(function (t) {
-          var key = t.itemId + '__' + t.otherEmail;
-          threadStore[key] = t;
+        data.threads.forEach(function(t) {
+          threadStore[t.itemId + '__' + t.otherEmail] = t;
         });
-
-        list.innerHTML = data.threads.map(function (t) {
-          var key      = t.itemId + '__' + t.otherEmail;
-          var label    = esc(t.otherName) + ' <span class="t-role">(' + esc(t.role) + ': ' + esc(t.itemName) + ')</span>';
-          var preview  = esc((t.lastMsg || '').substring(0, 50)) + (t.lastMsg && t.lastMsg.length > 50 ? '…' : '');
-          return '<div class="thread-item" id="thread-' + esc(key) + '" data-key="' + esc(key) + '" onclick="openThreadByKey(this.dataset.key)">'
+        list.innerHTML = data.threads.map(function(t) {
+          var key     = t.itemId + '__' + t.otherEmail;
+          var label   = esc(t.otherName) + ' <span class="t-role">(' + esc(t.itemName) + ')</span>';
+          var preview = esc((t.lastMsg || '').substring(0, 50)) + (t.lastMsg && t.lastMsg.length > 50 ? '...' : '');
+          return '<div class="thread-item" id="ti-' + esc(key) + '" data-key="' + esc(key) + '" onclick="openThreadByKey(this.dataset.key)">'
             + '<div class="t-name">' + label + '</div>'
             + '<div class="t-preview">' + preview + '</div>'
             + '</div>';
         }).join('');
-
-        // Auto-open from URL params (e.g. arriving from buy page)
-        var p = new URLSearchParams(window.location.search);
-        if (p.get('itemId') && p.get('otherEmail')) {
-          openThread(p.get('itemId'), p.get('otherEmail'), p.get('itemName') || 'Item', p.get('otherEmail'));
+        if (URL_ITEM && URL_OTHER) {
+          var k  = URL_ITEM + '__' + URL_OTHER.toLowerCase();
+          var el = document.getElementById('ti-' + k);
+          if (el) el.classList.add('active');
         }
       } catch (err) {
-        console.error('[loadThreads] error:', err);
+        console.error('[loadThreads]', err);
+        list.innerHTML = '<div class="no-threads">Could not load conversations.</div>';
       }
     }
 
-    // ── Open thread by key (from thread list click) ──────────────────────────
     function openThreadByKey(key) {
       var t = threadStore[key];
       if (!t) return;
-      openThread(t.itemId, t.otherEmail, t.itemName, t.otherName);
+      openThread(t.itemId, t.otherEmail, t.itemName, t.otherName, t.itemImage || '');
     }
 
-    // ── Open a conversation ──────────────────────────────────────────────────
-    function openThread(itemId, otherEmail, itemName, otherName) {
-      otherName = otherName || otherEmail; // fallback to email if name not available
-      activeThread = { itemId: itemId, otherEmail: otherEmail, itemName: itemName, otherName: otherName };
+    function openThread(itemId, otherEmail, itemName, otherName, itemImage) {
+      otherName = otherName || otherEmail;
+      itemName  = itemName  || 'Item';
+      itemImage = itemImage || '';
+      activeThread = { itemId: itemId, otherEmail: otherEmail, itemName: itemName, otherName: otherName, itemImage: itemImage };
 
-      document.querySelectorAll('.thread-item').forEach(function (el) { el.classList.remove('active'); });
-      var key = itemId + '__' + otherEmail;
-      var el  = document.getElementById('thread-' + key);
-      if (el) el.classList.add('active');
-
+      document.querySelectorAll('.thread-item').forEach(function(el) { el.classList.remove('active'); });
+      var sideEl = document.getElementById('ti-' + itemId + '__' + otherEmail.toLowerCase());
+      if (sideEl) sideEl.classList.add('active');
       joinRoom(activeThread);
 
       var panel = document.getElementById('chat-panel');
-      panel.innerHTML =
-        '<div class="chat-header">'
-          + '<div class="ch-avatar">' + esc(otherName).charAt(0).toUpperCase() + '</div>'
-          + '<div class="ch-info">'
-            + '<div class="ch-name">' + esc(otherName) + '</div>'
-            + '<div class="ch-item">📦 ' + esc(itemName) + '</div>'
-          + '</div>'
-        + '</div>'
-        + '<div class="messages-area" id="messages-area"></div>'
-        + '<div class="chat-input-area">'
-          + '<textarea id="msg-input" placeholder="Type a message..." rows="1"'
-          + ' onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendMessage();}"'
-          + ' oninput="autoResize(this)"></textarea>'
-          + '<button class="btn-send" onclick="sendMessage()" id="send-btn" title="Send">➤</button>'
-        + '</div>';
+      panel.innerHTML = '';
+
+      // Item context bar — built with DOM, no inline handlers
+      var ctx = document.createElement('div');
+      ctx.className = 'item-ctx';
+      if (itemImage) {
+        var img = document.createElement('img');
+        img.className = 'item-ctx-img';
+        img.src = API + '/uploads/' + itemImage;
+        img.alt = itemName;
+        var ph = document.createElement('div');
+        ph.className = 'item-ctx-ph';
+        ph.style.display = 'none';
+        ph.textContent = '📦';
+        img.onerror = function() { img.style.display = 'none'; ph.style.display = 'flex'; };
+        ctx.appendChild(img);
+        ctx.appendChild(ph);
+      } else {
+        var ph2 = document.createElement('div');
+        ph2.className = 'item-ctx-ph';
+        ph2.textContent = '📦';
+        ctx.appendChild(ph2);
+      }
+      var ctxInfo = document.createElement('div');
+      ctxInfo.className = 'item-ctx-info';
+      var ctxLbl = document.createElement('span');
+      ctxLbl.className = 'item-ctx-label';
+      ctxLbl.textContent = 'Chatting about';
+      var ctxTtl = document.createElement('span');
+      ctxTtl.className = 'item-ctx-title';
+      ctxTtl.textContent = itemName;
+      ctxInfo.appendChild(ctxLbl);
+      ctxInfo.appendChild(ctxTtl);
+      ctx.appendChild(ctxInfo);
+      panel.appendChild(ctx);
+
+      // Chat header
+      var hdr = document.createElement('div');
+      hdr.className = 'chat-header';
+      var av = document.createElement('div');
+      av.className = 'ch-avatar';
+      av.textContent = otherName.charAt(0).toUpperCase();
+      var inf = document.createElement('div');
+      inf.className = 'ch-info';
+      var nm = document.createElement('div');
+      nm.className = 'ch-name';
+      nm.textContent = otherName;
+      var it = document.createElement('div');
+      it.className = 'ch-item';
+      it.textContent = '📦 ' + itemName;
+      inf.appendChild(nm); inf.appendChild(it);
+      hdr.appendChild(av); hdr.appendChild(inf);
+      panel.appendChild(hdr);
+
+      // Messages area
+      var area = document.createElement('div');
+      area.className = 'messages-area';
+      area.id = 'messages-area';
+      panel.appendChild(area);
+
+      // Input area — addEventListener, no inline handlers
+      var inputWrap = document.createElement('div');
+      inputWrap.className = 'chat-input-area';
+      var ta = document.createElement('textarea');
+      ta.id = 'msg-input';
+      ta.placeholder = 'Type a message...';
+      ta.rows = 1;
+      ta.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+      });
+      ta.addEventListener('input', function() { autoResize(ta); });
+      // Attach button
+      var abtn = document.createElement('button');
+      abtn.type = 'button';
+      abtn.className = 'btn-attach';
+      abtn.title = 'Attach image';
+      abtn.innerHTML = '&#128247;';
+      abtn.addEventListener('click', function(e) { e.stopPropagation(); showAttachPopup(abtn); });
+
+      var sbtn = document.createElement('button');
+      sbtn.className = 'btn-send';
+      sbtn.id = 'send-btn';
+      sbtn.title = 'Send';
+      sbtn.innerHTML = '&#10148;';
+      sbtn.addEventListener('click', sendMessage);
+      inputWrap.appendChild(abtn);
+      inputWrap.appendChild(ta);
+      inputWrap.appendChild(sbtn);
+      panel.appendChild(inputWrap);
 
       fetchMessages();
     }
 
-    // ── Load message history ─────────────────────────────────────────────────
     async function fetchMessages() {
       if (!activeThread) return;
-      var itemId     = activeThread.itemId;
-      var otherEmail = activeThread.otherEmail;
       try {
-        var url  = API + '/api/messages/' + itemId
-                 + '?myEmail='    + encodeURIComponent(user.email)
-                 + '&otherEmail=' + encodeURIComponent(otherEmail);
+        var url = API + '/api/messages/' + activeThread.itemId
+          + '?myEmail='    + encodeURIComponent(user.email)
+          + '&otherEmail=' + encodeURIComponent(activeThread.otherEmail);
         var res  = await fetch(url);
         var data = await res.json();
-        if (!data.success) { console.warn('[fetchMessages] failed:', data); return; }
-
+        if (!data.success) { console.warn('[fetchMessages]', data); return; }
         var area = document.getElementById('messages-area');
         if (!area) return;
-
         area.innerHTML = '';
         renderedMsgIds.clear();
-
-        if (data.messages.length === 0) {
-          area.innerHTML = '<div class="chat-day-label">No messages yet. Say hello! 👋</div>';
+        if (!data.messages.length) {
+          area.innerHTML = '<div class="chat-day-label">No messages yet. Say hello! &#128075;</div>';
         } else {
           var lastDate = '';
-          data.messages.forEach(function (m) {
+          data.messages.forEach(function(m) {
             var d = new Date(m.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
             if (d !== lastDate) {
-              area.insertAdjacentHTML('beforeend', '<div class="chat-day-label">' + d + '</div>');
+              area.insertAdjacentHTML('beforeend', '<div class="chat-day-label">' + esc(d) + '</div>');
               lastDate = d;
             }
             appendMessage(m);
           });
         }
         scrollToBottom();
-      } catch (err) {
-        console.error('[fetchMessages] error:', err);
-      }
+      } catch (err) { console.error('[fetchMessages]', err); }
     }
 
-    // ── appendMessage — single entry point for all DOM writes ────────────────
     function appendMessage(msg) {
       var area = document.getElementById('messages-area');
       if (!area) return;
-
-      var key = msgKey(msg);
+      var key = msg._id ? String(msg._id) : (msg.senderEmail + '|' + msg.text + '|' + msg.createdAt);
       if (renderedMsgIds.has(key)) return;
       renderedMsgIds.add(key);
-
-      var placeholder = area.querySelector('.chat-day-label');
-      if (placeholder && placeholder.textContent.includes('No messages')) placeholder.remove();
-
-      area.insertAdjacentHTML('beforeend', buildBubble(msg));
+      var ph = area.querySelector('.chat-day-label');
+      if (ph && ph.textContent.includes('No messages')) ph.remove();
+      var isMine = msg.senderEmail === user.email.toLowerCase();
+      var time   = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      var bubble = document.createElement('div');
+      bubble.className = 'msg-bubble ' + (isMine ? 'sent' : 'received');
+      if (msg.text && msg.text.startsWith('[img]')) {
+        // Image message — render as thumbnail
+        var imgFilename = msg.text.slice(5);
+        var msgImg = document.createElement('img');
+        msgImg.className = 'msg-img';
+        msgImg.src = API + '/uploads/' + imgFilename;
+        msgImg.alt = 'Image';
+        msgImg.addEventListener('click', function() { window.open(API + '/uploads/' + imgFilename, '_blank'); });
+        bubble.appendChild(msgImg);
+      } else {
+        bubble.textContent = msg.text;
+      }
+      var meta = document.createElement('div');
+      meta.className = 'msg-meta';
+      meta.textContent = (isMine ? 'You' : msg.senderName) + ' · ' + time;
+      bubble.appendChild(meta);
+      area.appendChild(bubble);
       scrollToBottom();
     }
 
-    function buildBubble(m) {
-      var isMine = m.senderEmail === user.email.toLowerCase();
-      var time   = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      return '<div class="msg-bubble ' + (isMine ? 'sent' : 'received') + '">' 
-           + esc(m.text)
-           + '<div class="msg-meta">' + (isMine ? 'You' : esc(m.senderName)) + ' · ' + time + '</div>'
-           + '</div>';
-    }
-
-    // ── Send — no optimistic render ──────────────────────────────────────────
     async function sendMessage() {
       if (!activeThread) return;
       var input = document.getElementById('msg-input');
       var btn   = document.getElementById('send-btn');
       var text  = input.value.trim();
       if (!text) return;
-
       btn.disabled       = true;
       input.value        = '';
       input.style.height = '';
-
-      var payload = {
-        itemId:        activeThread.itemId,
-        senderEmail:   user.email,
-        receiverEmail: activeThread.otherEmail,
-        senderName:    user.name,
-        text:          text
-      };
-
       try {
-        var res  = await fetch(API + '/api/messages', {
+        var res = await fetch(API + '/api/messages', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify(payload)
+          body:    JSON.stringify({
+            itemId:        activeThread.itemId,
+            senderEmail:   user.email,
+            receiverEmail: activeThread.otherEmail,
+            senderName:    user.name,
+            text:          text
+          })
         });
         var data = await res.json();
-        if (!res.ok) {
-          alert(data.error || 'Failed to send.');
-          input.value = text;
-        }
-        // On success the server emits new_message to the room.
-        // appendMessage() will render it when that socket event arrives.
-      } catch (err) {
-        console.error('[sendMessage] network error:', err);
-        alert('Network error. Try again.');
-        input.value = text;
-      } finally {
-        btn.disabled = false;
-        input.focus();
-      }
+        if (!res.ok) { alert(data.error || 'Failed to send.'); input.value = text; }
+      } catch (err) { alert('Network error. Try again.'); input.value = text; }
+      finally { btn.disabled = false; input.focus(); }
     }
 
     function scrollToBottom() {
-      var area = document.getElementById('messages-area');
-      if (area) area.scrollTop = area.scrollHeight;
+      var a = document.getElementById('messages-area');
+      if (a) a.scrollTop = a.scrollHeight;
     }
-
     function autoResize(el) {
       el.style.height = 'auto';
       el.style.height = Math.min(el.scrollHeight, 120) + 'px';
     }
-
-    function esc(str) {
+    function esc(s) {
       var d = document.createElement('div');
-      d.textContent = str || '';
+      d.textContent = s || '';
       return d.innerHTML;
     }
 
     initSocket();
+    if (URL_ITEM && URL_OTHER) {
+      openThread(URL_ITEM, URL_OTHER, URL_NAME, URL_ONAME || URL_OTHER, URL_IMAGE);
+    }
     loadThreads();
+
+    // ── Image attach ─────────────────────────────────────────────────────────
+    var pendingImageFile = null;
+    var webcamStream     = null;
+
+    // Detect mobile: touchscreen + mobile UA
+    function isMobileDevice() {
+      return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) &&
+             /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    }
+
+    // Toast notification
+    function showToast(msg) {
+      var t = document.createElement('div');
+      t.textContent = msg;
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+        'background:#1f2937;color:#fff;padding:.6rem 1.1rem;border-radius:8px;' +
+        'font-size:.82rem;z-index:9999;max-width:300px;text-align:center;' +
+        'box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none;';
+      document.body.appendChild(t);
+      setTimeout(function() { t.remove(); }, 3000);
+    }
+
+    // Show image preview overlay with a File or Blob
+    function showImagePreview(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { showToast('Please select an image file.'); return; }
+      if (file.size > 5 * 1024 * 1024)    { showToast('Image must be under 5 MB.');    return; }
+      pendingImageFile = file;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('img-preview-img').src = e.target.result;
+        var kb = (file.size / 1024).toFixed(0);
+        document.getElementById('img-preview-label').textContent =
+          (file.name || 'photo.jpg') + ' (' + kb + ' KB)';
+        document.getElementById('img-preview-overlay').style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ── Wire up file inputs and preview buttons ───────────────────────────────
+    (function() {
+      var camInput  = document.getElementById('chat-img-camera');
+      var galInput  = document.getElementById('chat-img-gallery');
+      var overlay   = document.getElementById('img-preview-overlay');
+      var prevImg   = document.getElementById('img-preview-img');
+      var btnSend   = document.getElementById('btn-img-send');
+      var btnCancel = document.getElementById('btn-img-cancel');
+      var btnChange = document.getElementById('btn-img-change');
+
+      camInput.addEventListener('change', function() {
+        if (camInput.files[0]) { showImagePreview(camInput.files[0]); camInput.value = ''; }
+      });
+      galInput.addEventListener('change', function() {
+        if (galInput.files[0]) { showImagePreview(galInput.files[0]); galInput.value = ''; }
+      });
+
+      btnCancel.addEventListener('click', function() {
+        overlay.style.display = 'none';
+        pendingImageFile = null;
+        prevImg.src = '';
+      });
+
+      btnChange.addEventListener('click', function() {
+        overlay.style.display = 'none';
+        pendingImageFile = null;
+        prevImg.src = '';
+        document.getElementById('chat-img-gallery').click();
+      });
+
+      btnSend.addEventListener('click', function() {
+        if (!pendingImageFile) return;
+        sendImageMessage(pendingImageFile, overlay, btnSend);
+      });
+    })();
+
+    // ── Webcam modal (desktop camera) ─────────────────────────────────────────
+    (function() {
+      var wcOverlay = document.getElementById('webcam-overlay');
+      var wcVideo   = document.getElementById('webcam-video');
+      var wcCanvas  = document.getElementById('webcam-canvas');
+      var wcErr     = document.getElementById('webcam-err');
+      var btnCancel = document.getElementById('btn-wc-cancel');
+      var btnCap    = document.getElementById('btn-wc-capture');
+
+      function stopStream() {
+        if (webcamStream) {
+          webcamStream.getTracks().forEach(function(t) { t.stop(); });
+          webcamStream = null;
+        }
+        wcVideo.srcObject = null;
+      }
+
+      // Exposed so showAttachPopup can call it
+      window._openWebcam = function() {
+        wcErr.style.display = 'none';
+        wcErr.textContent = '';
+        btnCap.disabled = true;
+        wcOverlay.style.display = 'flex';
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          wcErr.textContent = 'Your browser does not support camera access.';
+          wcErr.style.display = 'block';
+          return;
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+          .then(function(stream) {
+            webcamStream = stream;
+            wcVideo.srcObject = stream;
+            wcVideo.onloadedmetadata = function() {
+              wcVideo.play();
+              btnCap.disabled = false;
+            };
+          })
+          .catch(function(err) {
+            var msg = 'Camera access denied.';
+            if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+              msg = 'No camera found on this device.';
+            } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+              msg = 'Camera access denied. Please allow camera permission in your browser settings.';
+            } else if (err.name === 'NotReadableError') {
+              msg = 'Camera is already in use by another application.';
+            }
+            wcErr.textContent = msg;
+            wcErr.style.display = 'block';
+            btnCap.disabled = true;
+          });
+      };
+
+      btnCancel.addEventListener('click', function() {
+        stopStream();
+        wcOverlay.style.display = 'none';
+      });
+
+      btnCap.addEventListener('click', function() {
+        if (!webcamStream) return;
+        // Draw current video frame to canvas
+        wcCanvas.width  = wcVideo.videoWidth  || 640;
+        wcCanvas.height = wcVideo.videoHeight || 480;
+        wcCanvas.getContext('2d').drawImage(wcVideo, 0, 0, wcCanvas.width, wcCanvas.height);
+
+        // Convert canvas to Blob then show preview
+        wcCanvas.toBlob(function(blob) {
+          stopStream();
+          wcOverlay.style.display = 'none';
+          // Give the blob a name so preview label shows something useful
+          blob.name = 'webcam-photo.jpg';
+          showImagePreview(blob);
+        }, 'image/jpeg', 0.9);
+      });
+    })();
+
+    // ── Attach popup ──────────────────────────────────────────────────────────
+    function showAttachPopup(anchorBtn) {
+      var old = document.getElementById('attach-popup');
+      if (old) { old.remove(); return; }
+
+      var popup = document.createElement('div');
+      popup.className = 'attach-popup';
+      popup.id = 'attach-popup';
+
+      var mobile = isMobileDevice();
+
+      // Camera button
+      var btnCam = document.createElement('button');
+      btnCam.type = 'button';
+      btnCam.innerHTML = '<span class="ap-icon">&#128247;</span> Camera';
+      btnCam.title = mobile ? 'Open device camera' : 'Use webcam';
+      btnCam.addEventListener('click', function() {
+        popup.remove();
+        if (mobile) {
+          // Mobile: use file input with capture attribute
+          document.getElementById('chat-img-camera').click();
+        } else {
+          // Desktop: open webcam modal
+          window._openWebcam();
+        }
+      });
+
+      // Upload Photo button
+      var btnGal = document.createElement('button');
+      btnGal.type = 'button';
+      btnGal.innerHTML = '<span class="ap-icon">&#128444;</span> Upload Photo';
+      btnGal.title = 'Upload from device';
+      btnGal.addEventListener('click', function() {
+        popup.remove();
+        document.getElementById('chat-img-gallery').click();
+      });
+
+      popup.appendChild(btnCam);
+      popup.appendChild(btnGal);
+      anchorBtn.parentNode.appendChild(popup);
+
+      setTimeout(function() {
+        document.addEventListener('click', function handler(e) {
+          if (!popup.contains(e.target) && e.target !== anchorBtn) {
+            popup.remove();
+            document.removeEventListener('click', handler);
+          }
+        });
+      }, 0);
+    }
+
+    // ── Upload image and send as chat message ─────────────────────────────────
+    async function sendImageMessage(file, overlay, sendBtn) {
+      if (!activeThread) { showToast('No active conversation.'); return; }
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending...';
+      try {
+        var formData = new FormData();
+        formData.append('image', file, file.name || 'photo.jpg');
+        formData.append('senderEmail', user.email);
+
+        var upRes  = await fetch(API + '/api/chat/upload-image', { method: 'POST', body: formData });
+        var upData = await upRes.json();
+        if (!upRes.ok || !upData.success) {
+          showToast(upData.error || 'Image upload failed.');
+          sendBtn.disabled = false; sendBtn.textContent = 'Send Image'; return;
+        }
+
+        var msgRes = await fetch(API + '/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            itemId:        activeThread.itemId,
+            senderEmail:   user.email,
+            receiverEmail: activeThread.otherEmail,
+            senderName:    user.name,
+            text:          '[img]' + upData.imageUrl
+          })
+        });
+        var msgData = await msgRes.json();
+        if (!msgRes.ok) { showToast(msgData.error || 'Failed to send.'); }
+
+        overlay.style.display = 'none';
+        pendingImageFile = null;
+        document.getElementById('img-preview-img').src = '';
+      } catch (err) {
+        console.error('[sendImageMessage]', err);
+        showToast('Network error. Try again.');
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send Image';
+      }
+    }
   </script>
 
-  <style>
-    .socket-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-left:.5rem; vertical-align:middle; transition:background .3s; }
-    .socket-dot.connected    { background:#10b981; box-shadow:0 0 6px #10b981; }
-    .socket-dot.disconnected { background:#ef4444; }
-    .chat-day-label { text-align:center; font-size:.72rem; color:var(--text3); font-weight:600; margin:.5rem 0; position:relative; }
-    .chat-day-label::before, .chat-day-label::after { content:''; position:absolute; top:50%; width:30%; height:1px; background:var(--border); }
-    .chat-day-label::before { left:0; }
-    .chat-day-label::after  { right:0; }
-    .typing-indicator { margin-left:auto; font-size:.75rem; color:var(--text2); font-style:italic; animation:pulse 1.2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-    .t-role { font-size:.78rem; font-weight:500; color:var(--p1); }
-  </style>
 </body>
 </html>

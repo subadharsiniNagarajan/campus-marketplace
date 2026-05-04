@@ -360,7 +360,7 @@ async function handleSell(e) {
   });
 
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Uploading…';
+  btn.innerHTML = '<span class="spinner"></span> Submitting…';
   showProgress(20, 'Uploading…');
 
   try {
@@ -371,7 +371,7 @@ async function handleSell(e) {
     if (!res.ok) {
       showAlert('sell-alert', data.error || 'Failed to list item.');
     } else {
-      showAlert('sell-alert', '🎉 Item listed successfully!', 'success');
+      showAlert('sell-alert', '✅ Item submitted for evaluation! An admin will review it shortly.', 'success');
       document.getElementById('sell-form').reset();
       selectedFiles = [];
       renderImageGrid();
@@ -385,7 +385,7 @@ async function handleSell(e) {
   } finally {
     hideProgress();
     btn.disabled = false;
-    btn.innerHTML = '🚀 List Item';
+    btn.innerHTML = 'Submit for Evaluation';
   }
 }
 

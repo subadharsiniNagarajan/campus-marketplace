@@ -32,8 +32,8 @@
 
   <div class="page-container">
     <div class="page-header">
-      <h2>List an Item</h2>
-      <p>Fill in the details below to list your item for fellow students.</p>
+      <h2>Submit an Item for Evaluation</h2>
+      <p>Fill in the details below. Your item will be reviewed by an admin before going live.</p>
     </div>
 
     <div class="sell-card">
@@ -116,8 +116,6 @@
         <!-- MULTIPLE IMAGE UPLOAD (up to 7) -->
         <div class="form-group">
           <label>Item Images</label>
-
-          <input type="file" id="input-camera"  accept="image/jpeg,image/jpg,image/png" capture="environment" style="display:none" onchange="handleMultiImageSelect(event)" />
           <input type="file" id="input-gallery" accept="image/jpeg,image/jpg,image/png" multiple style="display:none" onchange="handleMultiImageSelect(event)" />
 
           <div class="img-dropzone" id="img-dropzone"
@@ -127,11 +125,8 @@
               <p class="idz-title">Drag &amp; drop images here</p>
               <p class="idz-sub">or choose an option below</p>
               <div class="idz-btns">
-                <button type="button" class="idz-btn" onclick="document.getElementById('input-camera').click()">
-                  Camera
-                </button>
                 <button type="button" class="idz-btn" onclick="document.getElementById('input-gallery').click()">
-                  Gallery
+                  Upload Photo
                 </button>
               </div>
               <p class="idz-hint">JPG / PNG &middot; max 5 MB each &middot; up to 7 images</p>
@@ -148,7 +143,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary btn-full" id="sell-btn">
-          List Item
+          Submit for Evaluation
         </button>
       </form>
     </div>
@@ -175,8 +170,8 @@
     // Resubmit mode: pre-fill form if ?resubmit=itemId in URL
     const resubmitId = new URLSearchParams(window.location.search).get('resubmit');
     if (resubmitId) {
-      document.querySelector('.page-header h2').textContent = 'Edit & Resubmit Item';
-      document.querySelector('.page-header p').textContent  = 'Update your item and resubmit for admin review.';
+      document.querySelector('.page-header h2').textContent = 'Edit & Resubmit for Evaluation';
+      document.querySelector('.page-header p').textContent  = 'Update your item details and resubmit for admin evaluation.';
       document.getElementById('sell-btn').textContent = 'Resubmit for Review';
 
       fetch(API + '/my-items?user_id=' + user.id)
