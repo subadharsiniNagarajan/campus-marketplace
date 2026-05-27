@@ -75,6 +75,9 @@ const itemSchema = new mongoose.Schema({
   buyer_id:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   user_id:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   sellerEmail:      { type: String, default: '' },
+  // Item availability status for chat system
+  item_status:      { type: String, enum: ['Available', 'Reserved', 'Sold'], default: 'Available' },
+  reserved_for:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   // Moderation
   status:           { type: String, enum: ['Pending','Approved','Rejected','Needs Correction'], default: 'Pending' },
   rejection_reason: { type: String, default: '' },
@@ -97,6 +100,25 @@ const ratingSchema = new mongoose.Schema({
 ratingSchema.index({ itemId: 1, userEmail: 1 }, { unique: true });
 
 const Rating = mongoose.model('Rating', ratingSchema);
+
+// ===== PURCHASE SCHEMA =====
+const purchaseSchema = new mongoose.Schema({
+  itemId:        { type: mongoose.Schema.Types.ObjectId, ref: 'Item', required: true },
+  itemName:      { type: String, required: true },
+  buyerEmail:    { type: String, required: true, lowercase: true },
+  buyerName:     { type: String, required: true },
+  sellerEmail:   { type: String, required: true, lowercase: true },
+  interaction:   { type: String, enum: ['meet_campus', 'chat_first'], default: 'chat_first' },
+  pickupTime:    { type: String, enum: ['Morning', 'Afternoon', 'Evening'], default: 'Afternoon' },
+  note:          { type: String, default: '', maxlength: 500 },
+  // Seller response
+  purchaseStatus: { type: String, enum: ['pending', 'accepted', 'rejected', 'reserved'], default: 'pending' },
+  sellerNote:    { type: String, default: '' }
+}, { timestamps: true });
+
+purchaseSchema.index({ itemId: 1, buyerEmail: 1 });
+const Purchase = mongoose.model('Purchase', purchaseSchema);
+
 // A conversation is uniquely identified by itemId + the two participant emails (buyer + seller).
 // Messages are only returned if the requester's email matches one of the two participants.
 const messageSchema = new mongoose.Schema({
@@ -176,7 +198,19 @@ app.post('/signup', async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email: email.toLowerCase(), password: hashed });
 
-    res.json({ success: true, message: 'Account created successfully.', userId: user._id, name: user.name });
+    const token = jwt.sign(
+      { id: user._id, email: user.email, name: user.name },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'Account created successfully.', 
+      userId: user._id, 
+      name: user.name,
+      token: token
+    });
   } catch (err) {
     console.error('Signup error:', err);
     res.status(500).json({ error: 'Server error during signup.' });
@@ -199,7 +233,19 @@ app.post('/login', async (req, res) => {
     if (!match)
       return res.status(401).json({ error: 'Invalid email or password.' });
 
-    res.json({ success: true, message: 'Login successful.', userId: user._id, name: user.name });
+    const token = jwt.sign(
+      { id: user._id, email: user.email, name: user.name },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'Login successful.', 
+      userId: user._id, 
+      name: user.name,
+      token: token
+    });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error during login.' });
@@ -253,10 +299,34 @@ app.post('/addItem', upload.array('images', 7), async (req, res) => {
 });
 
 // GET /items � supports: search, category, minPrice, maxPrice, department, deal_type
+// GET /items/:id -- single item fetch
+app.get('/items/:id', async (req, res) => {
+  try {
+    var id = req.params.id;
+    if (!require('mongoose').Types.ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid item ID.' });
+    var item = await Item.findById(id).lean();
+    if (!item) return res.status(404).json({ error: 'Item not found.' });
+    res.json({ success: true, item });
+  } catch(err) {
+    console.error('Get item error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
 app.get('/items', async (req, res) => {
   try {
     const { category, search, minPrice, maxPrice, department, deal_type } = req.query;
-    const filter = { status: 'Approved' }; // Only approved items visible to buyers
+    const userEmail = req.query.userEmail; // Get user email to show reserved items
+    
+    // Only show approved items that are Available OR reserved for this user
+    const filter = { 
+      status: 'Approved',
+      $or: [
+        { item_status: 'Available' },
+        { item_status: 'Reserved', reserved_for: null }, // Fallback for old data
+        ...(userEmail ? [{ item_status: 'Reserved', sellerEmail: userEmail.toLowerCase() }] : [])
+      ]
+    };
 
     if (category && category !== 'all') filter.category = category;
     if (deal_type && deal_type !== 'all') filter.deal_type = deal_type;
@@ -306,11 +376,47 @@ app.put('/items/:id/sold', async (req, res) => {
       return res.status(403).json({ error: 'Only the seller can mark this item as sold.' });
 
     item.sold = true;
+    item.item_status = 'Sold';
     await item.save();
 
     res.json({ success: true, message: 'Item marked as sold.' });
   } catch (err) {
     console.error('Mark sold error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// PUT /items/:id/status — seller updates item status (Available, Reserved, Sold)
+app.put('/items/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id, item_status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ error: 'Invalid item ID.' });
+
+    if (!['Available', 'Reserved', 'Sold'].includes(item_status))
+      return res.status(400).json({ error: 'Invalid status. Must be Available, Reserved, or Sold.' });
+
+    const item = await Item.findById(id);
+    if (!item)
+      return res.status(404).json({ error: 'Item not found.' });
+
+    // Only the seller can update status
+    if (!user_id || !item.user_id || item.user_id.toString() !== user_id.toString())
+      return res.status(403).json({ error: 'Only the seller can update item status.' });
+
+    item.item_status = item_status;
+    if (item_status === 'Sold') {
+      item.sold = true;
+    } else {
+      item.sold = false;
+    }
+    await item.save();
+
+    res.json({ success: true, message: `Item status updated to ${item_status}.`, item });
+  } catch (err) {
+    console.error('Update status error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 });
@@ -816,6 +922,21 @@ app.post('/api/messages', async (req, res) => {
     const sender = await User.findOne({ email: senderEmail.toLowerCase() });
     if (!sender) return res.status(401).json({ error: 'Sender not found. Please log in.' });
 
+    // Check item status - prevent new messages if Reserved or Sold
+    const item = await Item.findById(itemId).select('item_status reserved_for sellerEmail').lean();
+    if (!item) return res.status(404).json({ error: 'Item not found.' });
+    
+    if (item.item_status === 'Reserved' || item.item_status === 'Sold') {
+      // Allow messages only between seller and the reserved buyer
+      const senderIsParticipant = 
+        senderEmail.toLowerCase() === item.sellerEmail?.toLowerCase() ||
+        (item.reserved_for && sender._id.toString() === item.reserved_for.toString());
+      
+      if (!senderIsParticipant) {
+        return res.status(403).json({ error: 'This item has been reserved. The conversation is closed.' });
+      }
+    }
+
     const msg = await Message.create({
       itemId,
       senderEmail:   senderEmail.toLowerCase(),
@@ -858,6 +979,10 @@ app.get('/api/messages/:itemId', async (req, res) => {
     const user = await User.findOne({ email: me });
     if (!user) return res.status(401).json({ error: 'Unauthorized.' });
 
+    // Fetch item to get status
+    const item = await Item.findById(itemId).select('item_status name').lean();
+    if (!item) return res.status(404).json({ error: 'Item not found.' });
+
     const messages = await Message.find({
       itemId,
       $or: [
@@ -867,7 +992,12 @@ app.get('/api/messages/:itemId', async (req, res) => {
     }).sort({ createdAt: 1 });
 
     console.log('[GET /api/messages] returning', messages.length, 'messages');
-    res.json({ success: true, messages });
+    res.json({ 
+      success: true, 
+      messages,
+      itemStatus: item.item_status || 'Available',
+      itemName: item.name
+    });
   } catch (err) {
     console.error('[GET /api/messages] error:', err);
     res.status(500).json({ error: 'Server error.' });
@@ -946,6 +1076,190 @@ app.post('/api/chat/upload-image', upload.single('image'), async (req, res) => {
   } catch (err) {
     console.error('[/api/chat/upload-image]', err);
     res.status(500).json({ error: 'Server error during image upload.' });
+  }
+});
+
+// ===== PURCHASE ROUTES =====
+
+// POST /api/purchase — buyer submits a purchase request
+app.post('/api/purchase', async (req, res) => {
+  try {
+    const { itemId, buyerEmail, note } = req.body;
+    console.log('[POST /api/purchase]', { itemId, buyerEmail });
+
+    if (!itemId || !buyerEmail)
+      return res.status(400).json({ error: 'itemId and buyerEmail are required.' });
+    if (!mongoose.Types.ObjectId.isValid(itemId))
+      return res.status(400).json({ error: 'Invalid item ID.' });
+
+    const buyer = await User.findOne({ email: buyerEmail.toLowerCase() });
+    if (!buyer) return res.status(401).json({ error: 'Buyer not found. Please log in.' });
+
+    const item = await Item.findById(itemId).lean();
+    if (!item) return res.status(404).json({ error: 'Item not found.' });
+    
+    // Check if item is available
+    if (item.item_status !== 'Available') {
+      return res.status(400).json({ error: 'This item is no longer available.' });
+    }
+
+    // Resolve seller email
+    let sellerEmail = (item.sellerEmail || '').toLowerCase().trim();
+    if (!sellerEmail && item.user_id) {
+      const seller = await User.findById(item.user_id).select('email').lean();
+      if (seller) sellerEmail = seller.email.toLowerCase();
+    }
+    if (!sellerEmail)
+      return res.status(400).json({ error: 'Could not find seller for this item.' });
+    if (sellerEmail === buyerEmail.toLowerCase())
+      return res.status(400).json({ error: 'You cannot buy your own listing.' });
+
+    // Check if buyer already has a pending request for this item
+    const existingRequest = await Purchase.findOne({
+      itemId,
+      buyerEmail: buyerEmail.toLowerCase(),
+      purchaseStatus: 'pending'
+    });
+    
+    if (existingRequest) {
+      return res.status(400).json({ 
+        error: 'You already have a pending request for this item.',
+        purchaseId: existingRequest._id
+      });
+    }
+
+    // Create purchase request
+    const purchase = await Purchase.create({
+      itemId,
+      itemName:   item.name,
+      buyerEmail: buyerEmail.toLowerCase(),
+      buyerName:  buyer.name,
+      sellerEmail,
+      note:       note ? note.trim().slice(0, 500) : '',
+      purchaseStatus: 'pending'
+    });
+
+    console.log('[POST /api/purchase] created:', purchase._id);
+
+    res.json({
+      success:    true,
+      message:    'Purchase request sent successfully.',
+      purchaseId: purchase._id,
+      sellerEmail
+    });
+  } catch (err) {
+    console.error('[POST /api/purchase] error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// GET /api/purchases/seller?sellerEmail= — seller sees all purchase requests for their items
+app.get('/api/purchases/seller', async (req, res) => {
+  try {
+    const { sellerEmail } = req.query;
+    if (!sellerEmail) return res.status(400).json({ error: 'sellerEmail is required.' });
+
+    const seller = await User.findOne({ email: sellerEmail.toLowerCase() });
+    if (!seller) return res.status(401).json({ error: 'Unauthorized.' });
+
+    const purchases = await Purchase.find({ sellerEmail: sellerEmail.toLowerCase() })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ success: true, purchases });
+  } catch (err) {
+    console.error('[GET /api/purchases/seller]', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// GET /api/purchases/buyer?buyerEmail= — buyer sees their own purchase requests
+app.get('/api/purchases/buyer', async (req, res) => {
+  try {
+    const { buyerEmail } = req.query;
+    if (!buyerEmail) return res.status(400).json({ error: 'buyerEmail is required.' });
+
+    const buyer = await User.findOne({ email: buyerEmail.toLowerCase() });
+    if (!buyer) return res.status(401).json({ error: 'Unauthorized.' });
+
+    const purchases = await Purchase.find({ buyerEmail: buyerEmail.toLowerCase() })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ success: true, purchases });
+  } catch (err) {
+    console.error('[GET /api/purchases/buyer]', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// GET /api/purchases/item/:itemId — get purchase status for a specific item (for buyer)
+app.get('/api/purchases/item/:itemId', async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { buyerEmail } = req.query;
+    if (!mongoose.Types.ObjectId.isValid(itemId))
+      return res.status(400).json({ error: 'Invalid item ID.' });
+
+    const query = { itemId };
+    if (buyerEmail) query.buyerEmail = buyerEmail.toLowerCase();
+
+    const purchase = await Purchase.findOne(query).sort({ createdAt: -1 }).lean();
+    res.json({ success: true, purchase: purchase || null });
+  } catch (err) {
+    console.error('[GET /api/purchases/item]', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// PUT /api/purchases/:id/respond — seller accepts or declines
+app.put('/api/purchases/:id/respond', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sellerEmail, action, sellerNote } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ error: 'Invalid purchase ID.' });
+    if (!['accept', 'reject'].includes(action))
+      return res.status(400).json({ error: 'action must be "accept" or "reject".' });
+
+    const purchase = await Purchase.findById(id);
+    if (!purchase) return res.status(404).json({ error: 'Purchase request not found.' });
+
+    if (purchase.sellerEmail !== sellerEmail.toLowerCase())
+      return res.status(403).json({ error: 'Only the seller can respond to this request.' });
+
+    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
+    purchase.purchaseStatus = newStatus;
+    purchase.sellerNote     = sellerNote ? sellerNote.trim() : '';
+    await purchase.save();
+
+    // If accepted → mark item as Reserved and hide from marketplace
+    if (action === 'accept') {
+      const buyer = await User.findOne({ email: purchase.buyerEmail });
+      await Item.findByIdAndUpdate(purchase.itemId, { 
+        item_status: 'Reserved',
+        reserved_for: buyer ? buyer._id : null
+      });
+      
+      // Reject all other pending requests for this item
+      await Purchase.updateMany(
+        { 
+          itemId: purchase.itemId, 
+          _id: { $ne: purchase._id },
+          purchaseStatus: 'pending'
+        },
+        { 
+          purchaseStatus: 'rejected',
+          sellerNote: 'Item has been reserved for another buyer.'
+        }
+      );
+    }
+
+    res.json({ success: true, message: `Purchase request ${newStatus}.`, purchase });
+  } catch (err) {
+    console.error('[PUT /api/purchases/:id/respond]', err);
+    res.status(500).json({ error: 'Server error.' });
   }
 });
 

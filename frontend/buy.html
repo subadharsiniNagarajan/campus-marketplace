@@ -142,6 +142,8 @@
 
   <script src="script.js"></script>
   <script>
+    if(navigator.serviceWorker){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(sw){sw.unregister();});});}
+    console.log("[CampusMart] buy.html loaded");
     requireAuth();
     const user = getUser();
     document.getElementById('nav-username').textContent = user.name;
@@ -401,10 +403,10 @@
           actions = '<div class="own-listing-badge">📌 Your Listing</div>'
             + '<button class="btn-mark-sold" onclick="markSold(\'' + item._id + '\',this)">Mark as Sold</button>';
         } else {
-          actions = '<button class="btn-contact btn-chat-seller" onclick="messageSeller(event,\'' + item._id + '\')">💬 Message Seller</button>';
+          actions = '<button class="btn-buy-item" onclick="viewPurchase(event,\'' + item._id + '\')">&#128722; Buy Item</button>' + '<button class="btn-contact btn-chat-seller" onclick="messageSeller(event,\'' + item._id + '\')">&#128172; Message Seller</button>';
         }
 
-        return '<div class="mc-card ' + (isSold ? 'mc-sold' : '') + '" id="card-' + item._id + '" onclick="viewProduct(''' + item._id + ''')' + '">'
+        return '<div class="mc-card ' + (isSold ? 'mc-sold' : '') + '" id="card-' + item._id + '" onclick="viewProduct(\'' + item._id + '\')">'
 
           + '<div class="mc-img-wrap">'
             + mainImgHtml
@@ -520,8 +522,19 @@
       return d.innerHTML;
     }
 
+    function goToPurchasePage(e,itemId){
+      e.stopPropagation();
+      window.location.href="purchase.html?id="+encodeURIComponent(itemId);
+    }
+
+    function viewPurchase(e, itemId) {
+      e.stopPropagation();
+      window.location.href = 'purchase.html?id=' + encodeURIComponent(itemId);
+    }
+
     loadItems();
+  
   </script>
+
 </body>
 </html>
-

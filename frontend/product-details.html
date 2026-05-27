@@ -9,13 +9,14 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Product Details – CampusMart</title>
+  <title>Product Details - CampusMart</title><!-- STAMP:1778340115556 -->
   <link rel="stylesheet" href="style.css" />
-  <style>.nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }</style>
+  <style>
+    .nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }
+  </style>
 </head>
 <body>
 
-  <!-- ── NAVBAR ─────────────────────────────────────────────────────── -->
   <nav class="navbar">
     <div class="logo">Campus<span>Mart</span></div>
     <div class="nav-links">
@@ -25,16 +26,15 @@
       <a href="chat.html">&#128172; <span>Chat</span></a>
     </div>
     <div class="nav-user">
-      <a href="settings.html" title="Profile" style="text-decoration:none;"><div class="avatar" id="avatar-initials">?</div></a>
+      <a href="settings.html" title="Profile" style="text-decoration:none;">
+        <div class="avatar" id="avatar-initials">?</div>
+      </a>
       <span class="nav-username" id="nav-username">Student</span>
       <button class="btn btn-danger" onclick="logout()">Logout</button>
     </div>
   </nav>
 
-  <!-- ── PRODUCT DETAILS PAGE ───────────────────────────────────────── -->
   <div class="page-container">
-    
-    <!-- Back button -->
     <div class="pd-back-btn-wrap">
       <button class="pd-back-btn" onclick="goBack()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -44,65 +44,44 @@
       </button>
     </div>
 
-    <!-- Loading state -->
     <div id="loading-state" class="pd-loading">
       <div class="spinner" style="width:48px;height:48px;border-width:4px;"></div>
       <p style="margin-top:1rem;color:var(--text2);">Loading product details...</p>
     </div>
 
-    <!-- Error state -->
     <div id="error-state" class="pd-error" style="display:none;">
-      <div class="empty-icon">⚠️</div>
+      <div class="empty-icon">&#9888;&#65039;</div>
       <h3>Product Not Found</h3>
       <p>This item may have been removed or is no longer available.</p>
       <button class="btn btn-primary" onclick="window.location.href='buy.html'" style="margin-top:1rem;">Browse Items</button>
     </div>
 
-    <!-- Product details content -->
     <div id="product-content" class="pd-container" style="display:none;">
-      
-      <!-- Left: Image carousel -->
       <div class="pd-left">
         <div class="pd-carousel">
           <div class="pd-carousel-main" id="carousel-main">
             <img id="main-image" src="" alt="Product" class="pd-main-img" />
             <button class="pd-carousel-btn pd-prev" id="btn-prev" onclick="prevImage()">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M15 18l-6-6 6-6"/>
-              </svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
             <button class="pd-carousel-btn pd-next" id="btn-next" onclick="nextImage()">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18l6-6-6-6"/>
-              </svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
             </button>
             <div class="pd-carousel-indicators" id="carousel-indicators"></div>
           </div>
-          
-          <!-- Thumbnail strip -->
           <div class="pd-thumbnails" id="thumbnails-strip"></div>
         </div>
       </div>
 
-      <!-- Right: Product info -->
       <div class="pd-right">
         <div class="pd-info-card">
-          
-          <!-- Category badge -->
           <div class="pd-category-badge" id="pd-category">Category</div>
-          
-          <!-- Product name -->
           <h1 class="pd-title" id="pd-title">Product Name</h1>
-          
-          <!-- Subject -->
-          <div class="pd-subject" id="pd-subject">📖 Subject</div>
-          
-          <!-- Price / Exchange -->
+          <div class="pd-subject" id="pd-subject">&#128218; Subject</div>
+          <div id="pd-status-badge" style="display:none;margin-top:0.5rem;"></div>
           <div class="pd-price-section" id="pd-price-section">
-            <div class="pd-price" id="pd-price">₹0</div>
+            <div class="pd-price" id="pd-price">&#8377;0</div>
           </div>
-          
-          <!-- Condition -->
           <div class="pd-meta-row">
             <div class="pd-meta-item">
               <span class="pd-meta-label">Condition</span>
@@ -113,14 +92,10 @@
               <span class="pd-meta-value" id="pd-listed">Just now</span>
             </div>
           </div>
-
-          <!-- Description -->
           <div class="pd-section">
             <h3 class="pd-section-title">Description</h3>
             <p class="pd-description" id="pd-description">No description provided.</p>
           </div>
-
-          <!-- Seller info -->
           <div class="pd-section">
             <h3 class="pd-section-title">Seller Information</h3>
             <div class="pd-seller-card">
@@ -132,364 +107,252 @@
             </div>
           </div>
 
-          <!-- Action buttons -->
-          <div class="pd-actions" id="pd-actions">
+          <div class="pd-actions" id="pd-actions" style="display:none;">
+            <button class="btn-pd-buy" id="btn-buy" onclick="buyItem()">
+              &#128722; Buy Item
+            </button>
             <button class="btn-pd-primary" id="btn-message" onclick="contactSeller()">
-              💬 Message Seller
+              &#128172; Message Seller
             </button>
             <button class="btn-pd-secondary" id="btn-wishlist" onclick="toggleWishlist()">
-              <span id="wishlist-icon">🤍</span> Add to Wishlist
+              <span id="wishlist-icon">&#129293;</span> Wishlist
             </button>
           </div>
 
-          <!-- Own listing / Sold state -->
           <div id="pd-own-listing" class="pd-own-listing" style="display:none;">
-            <div class="pd-own-badge">📌 This is your listing</div>
+            <div class="pd-own-badge">&#128204; This is your listing</div>
             <button class="btn-pd-mark-sold" id="btn-mark-sold" onclick="markAsSold()">Mark as Sold</button>
           </div>
 
           <div id="pd-sold-state" class="pd-sold-banner" style="display:none;">
-            <div class="pd-sold-icon">✅</div>
+            <div class="pd-sold-icon">&#9989;</div>
             <div>
               <div class="pd-sold-title">This item has been sold</div>
               <div class="pd-sold-sub">No longer available for purchase</div>
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
   </div>
 
   <script src="script.js"></script>
   <script>
+    // Force clear any service worker cache
+    if(navigator.serviceWorker){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(sw){sw.unregister();});});}
+    console.log("[CampusMart] product-details.html loaded - Buy flow: buyItem() -> purchase.html");
     requireAuth();
-    const user = getUser();
-    document.getElementById('nav-username').textContent = user.name;
+    var user = getUser();
+    document.getElementById('nav-username').textContent    = user.name;
     document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
 
-    let currentItem = null;
-    let currentImages = [];
-    let currentImageIndex = 0;
-    let isInWishlist = false;
+    var API_BASE = (typeof API !== 'undefined') ? API : 'http://localhost:3000';
+    var currentItem       = null;
+    var currentImages     = [];
+    var currentImageIndex = 0;
+    var isInWishlist      = false;
 
-    // Get item ID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const itemId = urlParams.get('id');
+    var urlParams = new URLSearchParams(window.location.search);
+    var itemId    = urlParams.get('id');
+    if (!itemId) { showError(); } else { loadProductDetails(itemId); }
 
-    if (!itemId) {
-      showError();
-    } else {
-      loadProductDetails(itemId);
-    }
-
-    function goBack() {
-      window.history.back();
-    }
+    function goBack() { window.history.back(); }
 
     async function loadProductDetails(id) {
       try {
-        const res = await fetch(API + '/items');
-        const data = await res.json();
-        
-        if (!res.ok || !data.items) {
-          showError();
-          return;
-        }
-
-        const item = data.items.find(i => i._id === id);
-        if (!item) {
-          showError();
-          return;
-        }
-
+        var res  = await fetch(API_BASE + '/items/' + id);
+        var data = await res.json();
+        if (!res.ok || !data.item) { showError(); return; }
+        var item = data.item;
         currentItem = item;
         renderProductDetails(item);
-        
-        // Hide loading, show content
         document.getElementById('loading-state').style.display = 'none';
         document.getElementById('product-content').style.display = 'grid';
-
-        // Check wishlist status
         checkWishlistStatus(id);
-      } catch (err) {
-        console.error('Load error:', err);
-        showError();
-      }
+      } catch(e) { console.error(e); showError(); }
     }
 
     function renderProductDetails(item) {
-      // Prepare images
       currentImages = [];
       if (Array.isArray(item.images) && item.images.length) {
-        currentImages = item.images.map(img => API + '/uploads/' + img);
+        currentImages = item.images.map(function(img){ return API_BASE + '/uploads/' + img; });
       } else if (item.image) {
-        currentImages = [API + '/uploads/' + item.image];
+        currentImages = [API_BASE + '/uploads/' + item.image];
       }
-
-      if (currentImages.length === 0) {
-        currentImages = ['data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ede9fe" width="400" height="400"/%3E%3Ctext x="50%25" y="50%25" font-size="80" text-anchor="middle" dy=".3em"%3E📦%3C/text%3E%3C/svg%3E'];
+      if (!currentImages.length) {
+        currentImages = ['data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22400%22 height%3D%22400%22%3E%3Crect fill%3D%22%23ede9fe%22 width%3D%22400%22 height%3D%22400%22%2F%3E%3Ctext x%3D%2250%25%22 y%3D%2250%25%22 font-size%3D%2280%22 text-anchor%3D%22middle%22 dy%3D%22.3em%22%3E%F0%9F%93%A6%3C%2Ftext%3E%3C%2Fsvg%3E'];
       }
-
       currentImageIndex = 0;
       renderCarousel();
 
-      // Category
-      const catIcons = {
-        'Books':'📚','Notes':'��','Lab Materials':'🔬',
-        'Electronics':'💡','Project Materials':'🛠️',
-        'Combo Kits':'📦','Shared / Giveaway':'🤝','Others':'🗂️'
-      };
-      const catIcon = catIcons[item.category] || '📦';
-      document.getElementById('pd-category').textContent = catIcon + ' ' + item.category;
+      var catIcons = {'Books':'&#128218;','Notes':'&#128221;','Lab Materials':'&#128300;','Electronics':'&#128161;','Project Materials':'&#128295;','Combo Kits':'&#128230;','Shared / Giveaway':'&#129309;','Others':'&#128193;'};
+      document.getElementById('pd-category').textContent = (catIcons[item.category] || '') + ' ' + item.category;
+      document.getElementById('pd-title').textContent    = item.name;
+      document.getElementById('pd-subject').textContent  = '&#128218; ' + item.subject;
 
-      // Title & Subject
-      document.getElementById('pd-title').textContent = item.name;
-      document.getElementById('pd-subject').textContent = '📖 ' + item.subject;
-
-      // Price / Exchange
-      const priceSection = document.getElementById('pd-price-section');
-      const isExchange = item.deal_type === 'exchange';
-      if (isExchange) {
-        priceSection.innerHTML = '<div class="pd-exchange-badge"><div class="pd-exchange-icon">🔄</div><div><div class="pd-exchange-label">Exchange For</div><div class="pd-exchange-value">' + esc(item.exchange_for || 'Open to offers') + '</div></div></div>';
+      var priceSection = document.getElementById('pd-price-section');
+      if (item.deal_type === 'exchange') {
+        priceSection.innerHTML = '<div class="pd-exchange-badge"><div class="pd-exchange-icon">&#x1F504;</div><div><div class="pd-exchange-label">Exchange For</div><div class="pd-exchange-value">' + esc(item.exchange_for || 'Open to offers') + '</div></div></div>';
       } else {
-        document.getElementById('pd-price').textContent = '₹' + Number(item.price).toLocaleString();
+        document.getElementById('pd-price').textContent = '\u20B9' + Number(item.price).toLocaleString();
       }
 
-      // Condition
-      const condBadge = document.getElementById('pd-condition');
+      var condBadge = document.getElementById('pd-condition');
       condBadge.textContent = item.condition;
-      condBadge.className = 'pd-condition-badge';
-      if (item.condition === 'New') condBadge.classList.add('cond-new');
+      condBadge.className   = 'pd-condition-badge';
+      if (item.condition === 'New')       condBadge.classList.add('cond-new');
       else if (item.condition === 'Good') condBadge.classList.add('cond-good');
-      else condBadge.classList.add('cond-used');
+      else                                condBadge.classList.add('cond-used');
 
-      // Listed date
-      const listedDate = new Date(item.createdAt);
-      const now = new Date();
-      const diffMs = now - listedDate;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-      let timeAgo = 'Just now';
-      if (diffMins < 60) timeAgo = diffMins + ' min' + (diffMins !== 1 ? 's' : '') + ' ago';
+      var listedDate = new Date(item.createdAt);
+      var now = new Date();
+      var diffMs = now - listedDate;
+      var diffMins  = Math.floor(diffMs / 60000);
+      var diffHours = Math.floor(diffMs / 3600000);
+      var diffDays  = Math.floor(diffMs / 86400000);
+      var timeAgo = 'Just now';
+      if      (diffMins  < 60) timeAgo = diffMins  + ' min'  + (diffMins  !== 1 ? 's' : '') + ' ago';
       else if (diffHours < 24) timeAgo = diffHours + ' hour' + (diffHours !== 1 ? 's' : '') + ' ago';
-      else if (diffDays < 7) timeAgo = diffDays + ' day' + (diffDays !== 1 ? 's' : '') + ' ago';
+      else if (diffDays  <  7) timeAgo = diffDays  + ' day'  + (diffDays  !== 1 ? 's' : '') + ' ago';
       else timeAgo = listedDate.toLocaleDateString();
       document.getElementById('pd-listed').textContent = timeAgo;
 
-      // Description
       document.getElementById('pd-description').textContent = item.description || 'No description provided.';
 
-      // Seller info
-      const sellerEmail = item.sellerEmail || 'Unknown';
-      const sellerName = sellerEmail.split('@')[0];
-      document.getElementById('seller-name').textContent = sellerName;
-      document.getElementById('seller-email').textContent = sellerEmail;
+      var sellerEmail = item.sellerEmail || 'Unknown';
+      var sellerName  = sellerEmail.split('@')[0];
+      document.getElementById('seller-name').textContent   = sellerName;
+      document.getElementById('seller-email').textContent  = sellerEmail;
       document.getElementById('seller-avatar').textContent = sellerName.charAt(0).toUpperCase();
 
-      // Check if own listing or sold
-      const isOwn = user.id && item.user_id && item.user_id.toString() === user.id.toString();
-      const isSold = item.sold;
+      var isOwn  = user.id && item.user_id && item.user_id.toString() === user.id.toString();
+      var isSold = item.sold;
 
       if (isSold) {
-        document.getElementById('pd-actions').style.display = 'none';
+        document.getElementById('pd-actions').style.display     = 'none';
         document.getElementById('pd-own-listing').style.display = 'none';
-        document.getElementById('pd-sold-state').style.display = 'flex';
+        document.getElementById('pd-sold-state').style.display  = 'flex';
       } else if (isOwn) {
-        document.getElementById('pd-actions').style.display = 'none';
+        document.getElementById('pd-actions').style.display     = 'none';
         document.getElementById('pd-own-listing').style.display = 'block';
+        document.getElementById('pd-sold-state').style.display  = 'none';
       } else {
-        document.getElementById('pd-actions').style.display = 'flex';
+        document.getElementById('pd-actions').style.display     = 'flex';
         document.getElementById('pd-own-listing').style.display = 'none';
-        document.getElementById('pd-sold-state').style.display = 'none';
+        document.getElementById('pd-sold-state').style.display  = 'none';
       }
     }
 
     function renderCarousel() {
-      const mainImg = document.getElementById('main-image');
+      var mainImg = document.getElementById('main-image');
       mainImg.src = currentImages[currentImageIndex];
-      mainImg.onerror = function() {
-        this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ede9fe" width="400" height="400"/%3E%3Ctext x="50%25" y="50%25" font-size="80" text-anchor="middle" dy=".3em"%3E📦%3C/text%3E%3C/svg%3E';
-      };
-
-      // Show/hide nav buttons
+      mainImg.onerror = function() { this.src = currentImages[0]; };
       document.getElementById('btn-prev').style.display = currentImages.length > 1 ? 'flex' : 'none';
       document.getElementById('btn-next').style.display = currentImages.length > 1 ? 'flex' : 'none';
-
-      // Indicators
-      const indicators = document.getElementById('carousel-indicators');
+      var indicators = document.getElementById('carousel-indicators');
       if (currentImages.length > 1) {
-        indicators.innerHTML = currentImages.map((_, i) => '<span class="pd-indicator ' + (i === currentImageIndex ? 'active' : '') + '" onclick="goToImage(' + i + ')"></span>').join('');
+        indicators.innerHTML = currentImages.map(function(_,i){ return '<span class="pd-indicator ' + (i===currentImageIndex?'active':'') + '" onclick="goToImage(' + i + ')"></span>'; }).join('');
         indicators.style.display = 'flex';
-      } else {
-        indicators.style.display = 'none';
-      }
-
-      // Thumbnails
-      const thumbStrip = document.getElementById('thumbnails-strip');
+      } else { indicators.style.display = 'none'; }
+      var thumbStrip = document.getElementById('thumbnails-strip');
       if (currentImages.length > 1) {
-        thumbStrip.innerHTML = currentImages.map((src, i) => '<img src="' + src + '" class="pd-thumb ' + (i === currentImageIndex ? 'active' : '') + '" onclick="goToImage(' + i + ')" onerror="this.style.display=\'none\'" />').join('');
+        thumbStrip.innerHTML = currentImages.map(function(src,i){ return '<img src="' + src + '" class="pd-thumb ' + (i===currentImageIndex?'active':'') + '" onclick="goToImage(' + i + ')" onerror="this.style.display=\'none\'" />'; }).join('');
         thumbStrip.style.display = 'flex';
-      } else {
-        thumbStrip.style.display = 'none';
-      }
+      } else { thumbStrip.style.display = 'none'; }
     }
+    function prevImage() { currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length; renderCarousel(); }
+    function nextImage() { currentImageIndex = (currentImageIndex + 1) % currentImages.length; renderCarousel(); }
+    function goToImage(i) { currentImageIndex = i; renderCarousel(); }
+    document.addEventListener('keydown', function(e) { if(e.key==='ArrowLeft') prevImage(); if(e.key==='ArrowRight') nextImage(); });
+    var _cm = document.getElementById('carousel-main');
+    var _tx = 0;
+    _cm.addEventListener('touchstart', function(e){ _tx = e.changedTouches[0].screenX; });
+    _cm.addEventListener('touchend',   function(e){ var dx=e.changedTouches[0].screenX-_tx; if(dx<-50)nextImage(); if(dx>50)prevImage(); });
 
-    function prevImage() {
-      currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
-      renderCarousel();
-    }
-
-    function nextImage() {
-      currentImageIndex = (currentImageIndex + 1) % currentImages.length;
-      renderCarousel();
-    }
-
-    function goToImage(index) {
-      currentImageIndex = index;
-      renderCarousel();
-    }
-
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'ArrowLeft') prevImage();
-      if (e.key === 'ArrowRight') nextImage();
-    });
-
-    // Touch swipe support
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const carouselMain = document.getElementById('carousel-main');
-    carouselMain.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; });
-    carouselMain.addEventListener('touchend', function(e) {
-      touchEndX = e.changedTouches[0].screenX;
-      if (touchStartX - touchEndX > 50) nextImage();
-      if (touchEndX - touchStartX > 50) prevImage();
-    });
-
-    async function contactSeller() {
+        async function contactSeller() {
       if (!currentItem) return;
-      const btn = document.getElementById('btn-message');
-      const orig = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = 'Opening...';
-
+      var btn = document.getElementById('btn-message');
+      var orig = btn.innerHTML;
+      btn.disabled = true; btn.innerHTML = 'Opening...';
       try {
-        const res = await fetch(API + '/api/chat/open', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        var res  = await fetch(API_BASE + '/api/chat/open', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ itemId: currentItem._id, buyerEmail: user.email })
         });
-        const data = await res.json();
-
+        var data = await res.json();
         if (res.ok && data.success) {
-          const sellerEmail = data.sellerEmail || currentItem.sellerEmail;
-          const sellerName = data.sellerName || sellerEmail;
-          const itemImage = data.itemImage || (currentItem.images && currentItem.images[0]) || currentItem.image || '';
-
-          const url = 'chat.html?itemId=' + encodeURIComponent(currentItem._id) + '&otherEmail=' + encodeURIComponent(sellerEmail) + '&otherName=' + encodeURIComponent(sellerName) + '&itemName=' + encodeURIComponent(currentItem.name) + '&itemImage=' + encodeURIComponent(itemImage);
-          window.location.href = url;
+          var se  = data.sellerEmail || currentItem.sellerEmail;
+          var sn  = data.sellerName  || se;
+          var img = data.itemImage   || (currentItem.images && currentItem.images[0]) || currentItem.image || '';
+          window.location.href = 'chat.html?itemId=' + encodeURIComponent(currentItem._id) + '&otherEmail=' + encodeURIComponent(se) + '&otherName=' + encodeURIComponent(sn) + '&itemName=' + encodeURIComponent(currentItem.name) + '&itemImage=' + encodeURIComponent(img);
         } else {
-          alert(data.error || 'Could not open chat.');
-          btn.disabled = false;
-          btn.textContent = orig;
+          showToast(data.error || 'Could not open chat.', 'error');
+          btn.disabled = false; btn.innerHTML = orig;
         }
-      } catch (err) {
-        alert('Network error. Please try again.');
-        btn.disabled = false;
-        btn.textContent = orig;
-      }
+      } catch(e) { showToast('Network error.', 'error'); btn.disabled = false; btn.innerHTML = orig; }
     }
 
     function checkWishlistStatus(id) {
-      const wishlist = JSON.parse(localStorage.getItem('campusmart_wishlist') || '[]');
-      isInWishlist = wishlist.includes(id);
+      var wl = JSON.parse(localStorage.getItem('campusmart_wishlist') || '[]');
+      isInWishlist = wl.includes(id);
       updateWishlistButton();
     }
-
     function toggleWishlist() {
       if (!currentItem) return;
-      const wishlist = JSON.parse(localStorage.getItem('campusmart_wishlist') || '[]');
-      const idx = wishlist.indexOf(currentItem._id);
-      
-      if (idx > -1) {
-        wishlist.splice(idx, 1);
-        isInWishlist = false;
-        showToast('Removed from wishlist', 'success');
-      } else {
-        wishlist.push(currentItem._id);
-        isInWishlist = true;
-        showToast('Added to wishlist', 'success');
-      }
-      
-      localStorage.setItem('campusmart_wishlist', JSON.stringify(wishlist));
+      var wl  = JSON.parse(localStorage.getItem('campusmart_wishlist') || '[]');
+      var idx = wl.indexOf(currentItem._id);
+      if (idx > -1) { wl.splice(idx,1); isInWishlist=false; showToast('Removed from wishlist','success'); }
+      else          { wl.push(currentItem._id); isInWishlist=true; showToast('Added to wishlist','success'); }
+      localStorage.setItem('campusmart_wishlist', JSON.stringify(wl));
       updateWishlistButton();
     }
-
     function updateWishlistButton() {
-      const btn = document.getElementById('btn-wishlist');
-      const icon = document.getElementById('wishlist-icon');
-      if (isInWishlist) {
-        icon.textContent = '❤️';
-        btn.innerHTML = '<span id="wishlist-icon">❤️</span> In Wishlist';
-      } else {
-        icon.textContent = '🤍';
-        btn.innerHTML = '<span id="wishlist-icon">🤍</span> Add to Wishlist';
-      }
+      var btn  = document.getElementById('btn-wishlist');
+      var icon = document.getElementById('wishlist-icon');
+      if (isInWishlist) { icon.textContent='&#10084;&#65039;'; btn.innerHTML='<span id="wishlist-icon">&#10084;&#65039;</span> Wishlist'; }
+      else              { icon.textContent='&#129293;';        btn.innerHTML='<span id="wishlist-icon">&#129293;</span> Wishlist'; }
     }
 
     async function markAsSold() {
       if (!currentItem || !confirm('Mark this item as SOLD?')) return;
-      const btn = document.getElementById('btn-mark-sold');
-      btn.disabled = true;
-      btn.textContent = 'Updating...';
-
+      var btn = document.getElementById('btn-mark-sold');
+      btn.disabled = true; btn.textContent = 'Updating...';
       try {
-        const res = await fetch(API + '/items/' + currentItem._id + '/sold', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+        var res  = await fetch(API_BASE + '/items/' + currentItem._id + '/sold', {
+          method: 'PUT', headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ user_id: user.id })
         });
-        const data = await res.json();
-
+        var data = await res.json();
         if (res.ok) {
           currentItem.sold = true;
           document.getElementById('pd-own-listing').style.display = 'none';
-          document.getElementById('pd-sold-state').style.display = 'flex';
+          document.getElementById('pd-sold-state').style.display  = 'flex';
           showToast('Item marked as sold', 'success');
         } else {
-          alert(data.error || 'Failed to mark as sold');
-          btn.disabled = false;
-          btn.textContent = 'Mark as Sold';
+          showToast(data.error || 'Failed to mark as sold', 'error');
+          btn.disabled = false; btn.textContent = 'Mark as Sold';
         }
-      } catch (err) {
-        alert('Network error');
-        btn.disabled = false;
-        btn.textContent = 'Mark as Sold';
-      }
+      } catch(e) { showToast('Network error','error'); btn.disabled=false; btn.textContent='Mark as Sold'; }
     }
 
     function showError() {
       document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('error-state').style.display = 'flex';
+      document.getElementById('error-state').style.display   = 'flex';
     }
-
     function showToast(msg, type) {
       type = type || 'success';
-      let t = document.getElementById('toast');
-      if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+      var t = document.getElementById('toast');
+      if (!t) { t = document.createElement('div'); t.id='toast'; document.body.appendChild(t); }
       t.textContent = msg;
-      t.className = 'toast toast-' + type + ' show';
+      t.className   = 'toast toast-' + type + ' show';
       clearTimeout(t._timer);
-      t._timer = setTimeout(function() { t.classList.remove('show'); }, 2800);
+      t._timer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
     }
+    function esc(s) { var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
-    function esc(str) {
-      const d = document.createElement('div');
-      d.textContent = str || '';
-      return d.innerHTML;
+    function buyItem() {
+      var id = urlParams.get('id');
+      if (id) window.location.href = 'purchase.html?id=' + encodeURIComponent(id);
     }
   </script>
 </body>

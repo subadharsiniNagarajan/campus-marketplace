@@ -60,6 +60,17 @@
     .btn-wc-capture { background:var(--p1,#6366f1);color:#fff; }
     .btn-wc-capture:disabled { opacity:.5;cursor:not-allowed; }
     .webcam-err { color:#dc2626;font-size:.82rem;margin-top:.5rem;text-align:center; }
+    /* Chat Closed Banner */
+    .chat-closed-banner { background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:1.5rem;margin:1rem;text-align:center; }
+    .chat-closed-icon { font-size:3rem;margin-bottom:0.5rem; }
+    .chat-closed-title { font-size:1.2rem;font-weight:700;color:#991b1b;margin-bottom:0.5rem; }
+    .chat-closed-message { color:#7f1d1d;font-size:0.95rem;line-height:1.6; }
+    /* Disabled Input */
+    .chat-input-area.locked { opacity:0.5;pointer-events:none;background:#f3f4f6;border-radius:8px; }
+    .chat-input-area.locked textarea { background:#e5e7eb;color:#9ca3af;cursor:not-allowed; }
+    /* Archived Thread */
+    .thread-item.archived { opacity:0.6;background:#f9fafb; }
+    .thread-item.archived .t-preview::before { content:'🔒 '; }
   </style>
 </head>
 <body>
@@ -328,12 +339,31 @@
         var res  = await fetch(url);
         var data = await res.json();
         if (!data.success) { console.warn('[fetchMessages]', data); return; }
+        
+        // Check item status
+        var itemStatus = data.itemStatus || 'Available';
+        var isClosed = (itemStatus === 'Reserved' || itemStatus === 'Sold');
+        
         var area = document.getElementById('messages-area');
         if (!area) return;
         area.innerHTML = '';
         renderedMsgIds.clear();
+        
+        // Show closed banner if conversation is locked
+        if (isClosed) {
+          var banner = document.createElement('div');
+          banner.className = 'chat-closed-banner';
+          banner.innerHTML = 
+            '<div class="chat-closed-icon">🔒</div>' +
+            '<div class="chat-closed-title">Conversation Closed</div>' +
+            '<div class="chat-closed-message">' +
+            'This item is no longer available. This purchase conversation has been archived.' +
+            '</div>';
+          area.appendChild(banner);
+        }
+        
         if (!data.messages.length) {
-          area.innerHTML = '<div class="chat-day-label">No messages yet. Say hello! &#128075;</div>';
+          area.insertAdjacentHTML('beforeend', '<div class="chat-day-label">No messages yet. Say hello! &#128075;</div>');
         } else {
           var lastDate = '';
           data.messages.forEach(function(m) {
@@ -345,6 +375,24 @@
             appendMessage(m);
           });
         }
+        
+        // Lock input area if conversation is closed
+        var inputArea = document.querySelector('.chat-input-area');
+        if (inputArea) {
+          if (isClosed) {
+            inputArea.classList.add('locked');
+            var textarea = document.getElementById('msg-input');
+            if (textarea) {
+              textarea.placeholder = 'This conversation is closed';
+              textarea.disabled = true;
+            }
+            var sendBtn = document.getElementById('send-btn');
+            if (sendBtn) sendBtn.disabled = true;
+            var attachBtn = document.querySelector('.btn-attach');
+            if (attachBtn) attachBtn.disabled = true;
+          }
+        }
+        
         scrollToBottom();
       } catch (err) { console.error('[fetchMessages]', err); }
     }
@@ -383,6 +431,14 @@
 
     async function sendMessage() {
       if (!activeThread) return;
+      
+      // Check if conversation is locked
+      var inputArea = document.querySelector('.chat-input-area');
+      if (inputArea && inputArea.classList.contains('locked')) {
+        showToast('This conversation is closed.');
+        return;
+      }
+      
       var input = document.getElementById('msg-input');
       var btn   = document.getElementById('send-btn');
       var text  = input.value.trim();
@@ -582,6 +638,13 @@
 
     // ── Attach popup ──────────────────────────────────────────────────────────
     function showAttachPopup(anchorBtn) {
+      // Check if conversation is locked
+      var inputArea = document.querySelector('.chat-input-area');
+      if (inputArea && inputArea.classList.contains('locked')) {
+        showToast('This conversation is closed.');
+        return;
+      }
+      
       var old = document.getElementById('attach-popup');
       if (old) { old.remove(); return; }
 
@@ -634,6 +697,14 @@
     // ── Upload image and send as chat message ─────────────────────────────────
     async function sendImageMessage(file, overlay, sendBtn) {
       if (!activeThread) { showToast('No active conversation.'); return; }
+      
+      // Check if conversation is locked
+      var inputArea = document.querySelector('.chat-input-area');
+      if (inputArea && inputArea.classList.contains('locked')) {
+        showToast('This conversation is closed.');
+        return;
+      }
+      
       sendBtn.disabled = true;
       sendBtn.textContent = 'Sending...';
       try {

@@ -1,0 +1,390 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    if (window.location.protocol === "file:") {
+      var page = window.location.pathname.split("/").pop() || "index.html";
+      window.location.replace("http://localhost:3000/" + page);
+    }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buy Item - CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }
+    .purchase-page { max-width:860px; margin:2rem auto; padding:0 1rem 4rem; }
+    .purchase-back { display:inline-flex; align-items:center; gap:0.4rem; color:var(--text2); font-size:0.88rem; font-weight:600; background:none; border:none; cursor:pointer; padding:0.4rem 0; margin-bottom:1.5rem; transition:color 0.15s; }
+    .purchase-back:hover { color:var(--p1); }
+    .purchase-grid { display:grid; grid-template-columns:1fr 1.4fr; gap:1.75rem; align-items:start; }
+    .purchase-item-card { background:var(--card); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; position:sticky; top:5rem; }
+    .purchase-item-img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:var(--bg2); }
+    .purchase-item-img-placeholder { width:100%; aspect-ratio:4/3; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:4rem; }
+    .purchase-item-info { padding:1.25rem; }
+    .purchase-item-category { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--p1); margin-bottom:0.4rem; }
+    .purchase-item-title { font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:0.5rem; line-height:1.3; }
+    .purchase-item-price { font-size:1.5rem; font-weight:900; color:var(--p1); margin-bottom:0.75rem; }
+    .purchase-item-price.exchange { font-size:1rem; color:var(--text2); font-weight:600; }
+    .purchase-item-meta { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+    .purchase-meta-chip { font-size:0.75rem; font-weight:600; padding:0.25rem 0.65rem; border-radius:99px; background:var(--bg2); color:var(--text2); }
+    .purchase-seller-row { display:flex; align-items:center; gap:0.6rem; padding-top:0.75rem; border-top:1px solid var(--border); }
+    .purchase-seller-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--p1),var(--p2)); color:#fff; font-size:0.85rem; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .purchase-seller-label { font-size:0.72rem; color:var(--text3); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
+    .purchase-seller-name { font-size:0.9rem; font-weight:700; color:var(--text); }
+    .purchase-form-card { background:var(--card); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:1.75rem; }
+    .purchase-form-title { font-size:1.2rem; font-weight:800; color:var(--text); margin-bottom:0.25rem; }
+    .purchase-form-subtitle { font-size:0.85rem; color:var(--text2); margin-bottom:1.5rem; }
+    .purchase-divider { height:1px; background:var(--border); margin:1.25rem 0; }
+    .purchase-field { margin-bottom:1.25rem; }
+    .purchase-field-label { display:block; font-size:0.88rem; font-weight:700; color:var(--text); margin-bottom:0.6rem; }
+    .purchase-field-label span { font-weight:400; color:var(--text3); }
+    .purchase-radio-group { display:flex; flex-direction:column; gap:0.6rem; }
+    .purchase-radio { cursor:pointer; }
+    .purchase-radio input[type="radio"] { display:none; }
+    .purchase-radio-box { display:flex; align-items:center; gap:0.85rem; padding:0.85rem 1rem; border:2px solid var(--border); border-radius:var(--radius); transition:all 0.15s; background:var(--card); }
+    .purchase-radio input[type="radio"]:checked + .purchase-radio-box { border-color:#059669; background:#f0fdf4; box-shadow:0 0 0 3px rgba(5,150,105,0.1); }
+    .purchase-radio-box:hover { border-color:#059669; background:#f0fdf4; }
+    .purchase-radio-icon { font-size:1.4rem; flex-shrink:0; }
+    .purchase-radio-text { display:flex; flex-direction:column; gap:0.1rem; }
+    .purchase-radio-text strong { font-size:0.92rem; font-weight:700; color:var(--text); }
+    .purchase-radio-text small { font-size:0.78rem; color:var(--text2); }
+    .purchase-select { width:100%; padding:0.75rem 1rem; border:1.5px solid var(--border); border-radius:var(--radius); font-size:0.92rem; font-family:inherit; color:var(--text); background:var(--card); cursor:pointer; transition:border-color 0.15s; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 1rem center; padding-right:2.5rem; }
+    .purchase-select:focus { outline:none; border-color:#059669; box-shadow:0 0 0 3px rgba(5,150,105,0.1); }
+    .purchase-textarea { width:100%; padding:0.75rem 1rem; border:1.5px solid var(--border); border-radius:var(--radius); font-size:0.9rem; font-family:inherit; color:var(--text); background:var(--card); resize:vertical; min-height:90px; transition:border-color 0.15s; }
+    .purchase-textarea:focus { outline:none; border-color:#059669; box-shadow:0 0 0 3px rgba(5,150,105,0.1); }
+    .purchase-textarea::placeholder { color:var(--text3); }
+    .purchase-char-count { font-size:0.75rem; color:var(--text3); text-align:right; margin-top:0.3rem; }
+    .purchase-actions { display:flex; gap:0.75rem; margin-top:1.5rem; }
+    .purchase-btn-cancel { flex:1; padding:0.85rem; background:var(--bg2); color:var(--text2); border:1.5px solid var(--border); border-radius:var(--radius); font-size:0.95rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+    .purchase-btn-cancel:hover { background:#ddd6fe; color:var(--p1); border-color:var(--p1); }
+    .purchase-btn-confirm { flex:2; padding:0.85rem; background:linear-gradient(135deg,#059669,#0d9488); color:#fff; border:none; border-radius:var(--radius); font-size:1rem; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.18s; box-shadow:0 4px 14px rgba(5,150,105,0.35); }
+    .purchase-btn-confirm:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 6px 20px rgba(5,150,105,0.5); }
+    .purchase-btn-confirm:disabled { opacity:0.65; cursor:not-allowed; transform:none; }
+    .purchase-notice { display:flex; align-items:center; gap:0.6rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:var(--radius-sm); padding:0.65rem 0.9rem; font-size:0.8rem; color:#15803d; font-weight:600; margin-top:1rem; }
+    .purchase-loading { text-align:center; padding:4rem 1rem; color:var(--text2); }
+    .purchase-error { text-align:center; padding:4rem 1rem; }
+    /* Success state */
+    .purchase-success-box { text-align:center; padding:2rem 1rem; }
+    .purchase-success-icon { font-size:4rem; margin-bottom:1rem; }
+    .purchase-success-title { font-size:1.3rem; font-weight:800; color:#15803d; margin-bottom:0.75rem; }
+    .purchase-success-msg { font-size:0.92rem; color:var(--text2); margin-bottom:1.75rem; line-height:1.6; }
+    .purchase-success-actions { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; }
+    .purchase-btn-chat { padding:0.85rem 1.75rem; background:linear-gradient(135deg,var(--p1),var(--p2)); color:#fff; border:none; border-radius:var(--radius); font-size:0.95rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.18s; box-shadow:0 4px 14px rgba(124,58,237,0.35); }
+    .purchase-btn-chat:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(124,58,237,0.5); }
+    .purchase-btn-home { padding:0.85rem 1.75rem; background:var(--bg2); color:var(--text2); border:1.5px solid var(--border); border-radius:var(--radius); font-size:0.95rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+    .purchase-btn-home:hover { background:#ddd6fe; color:var(--p1); border-color:var(--p1); }
+    @media (max-width:680px) {
+      .purchase-grid { grid-template-columns:1fr; }
+      .purchase-item-card { position:static; }
+      .purchase-actions { flex-direction:column; }
+      .purchase-btn-cancel, .purchase-btn-confirm { flex:none; }
+      .purchase-success-actions { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">Campus<span>Mart</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html">&#127968; <span>Home</span></a>
+      <a href="sell.html">&#129689; <span>Sell</span></a>
+      <a href="buy.html" class="active">&#128722; <span>Buy</span></a>
+      <a href="chat.html">&#128172; <span>Chat</span></a>
+    </div>
+    <div class="nav-user">
+      <a href="settings.html" title="Profile" style="text-decoration:none;">
+        <div class="avatar" id="avatar-initials">?</div>
+      </a>
+      <span class="nav-username" id="nav-username">Student</span>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="purchase-page">
+
+    <div id="purchase-loading" class="purchase-loading">
+      <div class="spinner" style="width:40px;height:40px;border-width:4px;margin:0 auto 1rem;"></div>
+      <p>Loading item details...</p>
+    </div>
+
+    <div id="purchase-error" class="purchase-error" style="display:none;">
+      <div style="font-size:3rem;margin-bottom:1rem;">&#9888;&#65039;</div>
+      <h3 style="margin-bottom:0.5rem;">Item not found</h3>
+      <p style="color:var(--text2);margin-bottom:1.5rem;">This item may have been removed.</p>
+      <button class="btn btn-primary" onclick="window.location.href='buy.html'">Browse Items</button>
+    </div>
+
+    <div id="purchase-content" style="display:none;">
+
+      <button class="purchase-back" onclick="goBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to item
+      </button>
+
+      <div class="purchase-grid">
+
+        <!-- LEFT: Item summary -->
+        <div class="purchase-item-card">
+          <div id="purchase-img-wrap"></div>
+          <div class="purchase-item-info">
+            <div class="purchase-item-category" id="purchase-category"></div>
+            <div class="purchase-item-title" id="purchase-title"></div>
+            <div class="purchase-item-price" id="purchase-price"></div>
+            <div class="purchase-item-meta" id="purchase-meta"></div>
+            <div class="purchase-seller-row">
+              <div class="purchase-seller-avatar" id="purchase-seller-avatar">S</div>
+              <div>
+                <div class="purchase-seller-label">Seller</div>
+                <div class="purchase-seller-name" id="purchase-seller-name">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Form card -->
+        <div class="purchase-form-card">
+          <div class="purchase-form-title">&#128722; Place Your Request</div>
+          <div class="purchase-form-subtitle">No payment needed — coordinate directly with the seller on campus.</div>
+
+          <div class="purchase-divider"></div>
+
+          <!-- FORM (hidden after confirm) -->
+          <div id="purchase-form-section">
+
+            <div class="purchase-field">
+              <label class="purchase-field-label">Preferred Interaction</label>
+              <div class="purchase-radio-group">
+                <label class="purchase-radio">
+                  <input type="radio" name="p_interaction" value="meet_campus" id="p-radio-meet" />
+                  <span class="purchase-radio-box">
+                    <span class="purchase-radio-icon">&#127979;</span>
+                    <span class="purchase-radio-text">
+                      <strong>Meet in campus</strong>
+                      <small>Arrange a face-to-face handover</small>
+                    </span>
+                  </span>
+                </label>
+                <label class="purchase-radio">
+                  <input type="radio" name="p_interaction" value="chat_first" id="p-radio-chat" checked />
+                  <span class="purchase-radio-box">
+                    <span class="purchase-radio-icon">&#128172;</span>
+                    <span class="purchase-radio-text">
+                      <strong>Chat with seller first</strong>
+                      <small>Discuss details before meeting</small>
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="purchase-field">
+              <label class="purchase-field-label" for="p-pickup-time">Preferred Pickup Time</label>
+              <select class="purchase-select" id="p-pickup-time">
+                <option value="Morning">&#9728;&#65039; Morning</option>
+                <option value="Afternoon" selected>&#127774; Afternoon</option>
+                <option value="Evening">&#127762; Evening</option>
+              </select>
+            </div>
+
+            <div class="purchase-field">
+              <label class="purchase-field-label" for="p-note">Note to Seller <span>(optional)</span></label>
+              <textarea class="purchase-textarea" id="p-note" placeholder="e.g. Can we meet near the library? I am free after 3pm." maxlength="300" rows="3"></textarea>
+              <div class="purchase-char-count"><span id="p-note-count">0</span>/300</div>
+            </div>
+
+            <div class="purchase-divider"></div>
+
+            <div class="purchase-actions">
+              <button class="purchase-btn-cancel" onclick="goBack()">Cancel</button>
+              <button class="purchase-btn-confirm" id="btn-confirm" onclick="confirmPurchase()">
+                &#10003; Confirm Purchase
+              </button>
+            </div>
+
+            <div class="purchase-notice">
+              &#128274; No payment required — campus coordination only.
+            </div>
+
+          </div><!-- /purchase-form-section -->
+
+          <!-- SUCCESS STATE (shown after confirm, NOT before) -->
+          <div id="purchase-success" style="display:none;">
+            <div class="purchase-success-box">
+              <div class="purchase-success-icon">&#9989;</div>
+              <h3 class="purchase-success-title">Purchase Request Sent Successfully!</h3>
+              <p class="purchase-success-msg">
+                Your request has been sent to the seller.<br>
+                You can now open a chat to coordinate the handover, or go back to browse more items.
+              </p>
+              <div class="purchase-success-actions">
+                <button class="purchase-btn-chat" onclick="openChat()">&#128172; Open Chat</button>
+                <button class="purchase-btn-home" onclick="window.location.href='buy.html'">&#127968; Back to Home</button>
+              </div>
+            </div>
+          </div><!-- /purchase-success -->
+
+        </div><!-- /purchase-form-card -->
+
+      </div><!-- /purchase-grid -->
+    </div><!-- /purchase-content -->
+  </div><!-- /purchase-page -->
+
+  <script src="script.js"></script>
+  <script>
+    requireAuth();
+    var user     = getUser();
+    var API_BASE = (typeof API !== 'undefined') ? API : 'http://localhost:3000';
+
+    document.getElementById('nav-username').textContent    = user.name;
+    document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
+
+    var currentItem          = null;
+    var _sellerEmailForChat  = '';
+
+    var params = new URLSearchParams(window.location.search);
+    var itemId = params.get('id');
+
+    if (!itemId) { showError(); } else { loadItem(itemId); }
+
+    function goBack() {
+      if (itemId) {
+        window.location.href = 'product-details.html?id=' + encodeURIComponent(itemId);
+      } else {
+        window.location.href = 'buy.html';
+      }
+    }
+
+    async function loadItem(id) {
+      try {
+        var res  = await fetch(API_BASE + '/items/' + id);
+        var data = await res.json();
+        if (!res.ok || !data.item) { showError(); return; }
+        currentItem = data.item;
+        renderItem(data.item);
+        document.getElementById('purchase-loading').style.display = 'none';
+        document.getElementById('purchase-content').style.display = 'block';
+      } catch(e) { console.error(e); showError(); }
+    }
+
+    function renderItem(item) {
+      var imgWrap = document.getElementById('purchase-img-wrap');
+      var imgSrc  = '';
+      if (Array.isArray(item.images) && item.images.length) imgSrc = API_BASE + '/uploads/' + item.images[0];
+      else if (item.image) imgSrc = API_BASE + '/uploads/' + item.image;
+
+      if (imgSrc) {
+        imgWrap.innerHTML = '<img class="purchase-item-img" src="' + esc(imgSrc) + '" alt="' + esc(item.name) + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" /><div class="purchase-item-img-placeholder" style="display:none;">&#128230;</div>';
+      } else {
+        imgWrap.innerHTML = '<div class="purchase-item-img-placeholder">&#128230;</div>';
+      }
+
+      var catIcons = {'Books':'&#128218;','Notes':'&#128221;','Lab Materials':'&#128300;','Electronics':'&#128161;','Project Materials':'&#128295;','Combo Kits':'&#128230;','Shared / Giveaway':'&#129309;','Others':'&#128193;'};
+      document.getElementById('purchase-category').innerHTML = (catIcons[item.category] || '') + ' ' + esc(item.category);
+      document.getElementById('purchase-title').textContent  = item.name;
+
+      var priceEl = document.getElementById('purchase-price');
+      if (item.deal_type === 'exchange') {
+        priceEl.className   = 'purchase-item-price exchange';
+        priceEl.textContent = 'Exchange for: ' + (item.exchange_for || 'Open to offers');
+      } else {
+        priceEl.className   = 'purchase-item-price';
+        priceEl.textContent = '\u20B9' + Number(item.price).toLocaleString();
+      }
+
+      var condClass = item.condition === 'New' ? 'cond-new' : item.condition === 'Good' ? 'cond-good' : 'cond-used';
+      document.getElementById('purchase-meta').innerHTML =
+        '<span class="purchase-meta-chip pd-condition-badge ' + condClass + '">' + esc(item.condition) + '</span>' +
+        '<span class="purchase-meta-chip">' + esc(item.subject) + '</span>';
+
+      var sellerEmail = item.sellerEmail || '';
+      var sellerName  = sellerEmail.split('@')[0] || 'Seller';
+      document.getElementById('purchase-seller-name').textContent   = sellerName;
+      document.getElementById('purchase-seller-avatar').textContent = sellerName.charAt(0).toUpperCase();
+
+      document.title = 'Buy ' + item.name + ' - CampusMart';
+    }
+
+    document.getElementById('p-note').addEventListener('input', function(){
+      document.getElementById('p-note-count').textContent = this.value.length;
+    });
+
+    async function confirmPurchase() {
+      if (!currentItem) return;
+
+      var btn         = document.getElementById('btn-confirm');
+      var interaction = document.querySelector('input[name="p_interaction"]:checked').value;
+      var pickupTime  = document.getElementById('p-pickup-time').value;
+      var note        = document.getElementById('p-note').value.trim();
+
+      btn.disabled    = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        var res  = await fetch(API_BASE + '/api/purchase', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            itemId:      currentItem._id,
+            buyerEmail:  user.email,
+            interaction: interaction,
+            pickupTime:  pickupTime,
+            note:        note
+          })
+        });
+        var data = await res.json();
+
+        if (!res.ok) {
+          showToast(data.error || 'Could not send request.', 'error');
+          btn.disabled    = false;
+          btn.textContent = '\u2713 Confirm Purchase';
+          return;
+        }
+
+        // Save seller email for the Open Chat button
+        _sellerEmailForChat = data.sellerEmail || currentItem.sellerEmail || '';
+
+        // Hide form, show success — do NOT open chat automatically
+        document.getElementById('purchase-form-section').style.display = 'none';
+        document.getElementById('purchase-success').style.display      = 'block';
+
+      } catch(e) {
+        showToast('Network error. Please try again.', 'error');
+        btn.disabled    = false;
+        btn.textContent = '\u2713 Confirm Purchase';
+      }
+    }
+
+    // Only called when user explicitly clicks "Open Chat"
+    function openChat() {
+      if (!currentItem) return;
+      var se  = _sellerEmailForChat || currentItem.sellerEmail || '';
+      var sn  = se.split('@')[0] || 'Seller';
+      var img = (currentItem.images && currentItem.images[0]) || currentItem.image || '';
+      window.location.href = 'chat.html'
+        + '?itemId='     + encodeURIComponent(currentItem._id)
+        + '&otherEmail=' + encodeURIComponent(se)
+        + '&otherName='  + encodeURIComponent(sn)
+        + '&itemName='   + encodeURIComponent(currentItem.name)
+        + '&itemImage='  + encodeURIComponent(img);
+    }
+
+    function showError() {
+      document.getElementById('purchase-loading').style.display = 'none';
+      document.getElementById('purchase-error').style.display   = 'block';
+    }
+
+    function showToast(msg, type) {
+      type = type || 'success';
+      var t = document.getElementById('toast');
+      if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+      t.textContent = msg;
+      t.className   = 'toast toast-' + type + ' show';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+    }
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+  </script>
+</body>
+</html>

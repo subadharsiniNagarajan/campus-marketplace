@@ -1,0 +1,23 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Testing API...</h1>
+    <div id="result"></div>
+    <script>
+        fetch('http://localhost:3000/items')
+            .then(r => r.json())
+            .then(d => {
+                const approved = d.items.filter(i => i.status === 'Approved');
+                document.getElementById('result').innerHTML = 
+                    '<h2>✅ Working! Found ' + approved.length + ' approved items</h2>' +
+                    '<p>First item: ' + approved[0].name + '</p>';
+            })
+            .catch(e => {
+                document.getElementById('result').innerHTML = '<h2>❌ Error: ' + e.message + '</h2>';
+            });
+    </script>
+</body>
+</html>

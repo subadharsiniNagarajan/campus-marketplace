@@ -1,0 +1,41 @@
+﻿# Reviews & Wishlist Implementation Guide
+
+## Quick Summary
+
+I'll help you add:
+1. Reviews & Ratings system for products
+2. Wishlist page to view saved items
+
+## Implementation Steps
+
+### 1. Backend - Add Review Schema
+
+Add to backend/server.js after the Item schema:
+
+const reviewSchema = new mongoose.Schema({
+  itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Item', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userEmail: { type: String, required: true },
+  userName: { type: String, required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, default: '', maxlength: 500 }
+}, { timestamps: true });
+
+reviewSchema.index({ itemId: 1, userId: 1 }, { unique: true });
+const Review = mongoose.model('Review', reviewSchema);
+
+### 2. Backend - Add Review Routes
+
+POST /items/:id/reviews - Submit review
+GET /items/:id/reviews - Get all reviews
+
+### 3. Frontend - Add Reviews Section to Product Details
+
+Add reviews HTML, JavaScript, and CSS
+
+### 4. Frontend - Create Wishlist Page
+
+Create wishlist.html with saved items display
+
+## Full implementation code is ready to be added!
+

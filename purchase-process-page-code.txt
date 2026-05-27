@@ -1,0 +1,496 @@
+COPY THIS ENTIRE CONTENT TO: frontend/purchase-process.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    if (window.location.protocol === "file:") {
+      var page = window.location.pathname.split("/").pop() || "index.html";
+      window.location.replace("http://localhost:3000/" + page);
+    }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purchase Process - CampusMart</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .purchase-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    
+    .purchase-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .purchase-header h1 {
+      font-size: 1.8rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    
+    .purchase-header p {
+      color: var(--text2);
+      font-size: 0.95rem;
+    }
+    
+    /* Progress Steps */
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 2rem 0;
+      position: relative;
+    }
+    
+    .progress-line {
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--border);
+      z-index: 0;
+    }
+    
+    .progress-line-fill {
+      height: 100%;
+      background: var(--p1);
+      transition: width 0.5s ease;
+    }
+    
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+      flex: 1;
+    }
+    
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg2);
+      border: 3px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--text3);
+      margin-bottom: 0.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .step.active .step-circle {
+      background: var(--p1);
+      border-color: var(--p1);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .step.completed .step-circle {
+      background: #10b981;
+      border-color: #10b981;
+      color: white;
+    }
+    
+    .step-label {
+      font-size: 0.85rem;
+      color: var(--text3);
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .step.active .step-label {
+      color: var(--p1);
+      font-weight: 600;
+    }
+    
+    .step.completed .step-label {
+      color: #10b981;
+    }
+    
+    /* Status Card */
+    .status-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin: 2rem 0;
+    }
+    
+    .status-icon {
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    
+    .status-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    
+    .status-message {
+      text-align: center;
+      color: var(--text2);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    
+    /* Item Info */
+    .item-info-card {
+      background: var(--bg2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin: 2rem 0;
+    }
+    
+    .item-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    
+    .item-details {
+      flex: 1;
+    }
+    
+    .item-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    
+    .item-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--p1);
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    
+    .btn-action {
+      flex: 1;
+      padding: 0.9rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary-action {
+      background: var(--p1);
+      color: white;
+    }
+    
+    .btn-primary-action:hover {
+      background: var(--p2);
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary-action {
+      background: var(--bg2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary-action:hover {
+      background: var(--bg3);
+    }
+    
+    /* Loading */
+    .loading-container {
+      text-align: center;
+      padding: 3rem;
+    }
+    
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--border);
+      border-top-color: var(--p1);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Note Section */
+    .note-section {
+      background: var(--bg2);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+    
+    .note-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text3);
+      margin-bottom: 0.5rem;
+    }
+    
+    .note-text {
+      color: var(--text);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Campus<span>Mart</span></div>
+    <div class="nav-links">
+      <a href="dashboard.html">&#127968; <span>Home</span></a>
+      <a href="sell.html">&#129689; <span>Sell</span></a>
+      <a href="buy.html">&#128722; <span>Buy</span></a>
+      <a href="chat.html">&#128172; <span>Chat</span></a>
+    </div>
+    <div class="nav-user">
+      <a href="settings.html" title="Profile" style="text-decoration:none;">
+        <div class="avatar" id="avatar-initials">?</div>
+      </a>
+      <span class="nav-username" id="nav-username">Student</span>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="purchase-container">
+    <div class="purchase-header">
+      <h1>Purchase Process</h1>
+      <p>Track your purchase request status</p>
+    </div>
+
+    <div id="loading-state" class="loading-container">
+      <div class="spinner"></div>
+      <p style="color:var(--text2);">Loading purchase details...</p>
+    </div>
+
+    <div id="content-state" style="display:none;">
+      <!-- Progress Steps -->
+      <div class="progress-steps">
+        <div class="progress-line">
+          <div class="progress-line-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="step" id="step-1">
+          <div class="step-circle">1</div>
+          <div class="step-label">Request Sent</div>
+        </div>
+        <div class="step" id="step-2">
+          <div class="step-circle">2</div>
+          <div class="step-label">Waiting for Seller</div>
+        </div>
+        <div class="step" id="step-3">
+          <div class="step-circle">3</div>
+          <div class="step-label">Reserved</div>
+        </div>
+      </div>
+
+      <!-- Item Info -->
+      <div class="item-info-card">
+        <img id="item-image" src="" alt="Item" class="item-image" />
+        <div class="item-details">
+          <div class="item-name" id="item-name">Item Name</div>
+          <div class="item-price" id="item-price">₹0</div>
+        </div>
+      </div>
+
+      <!-- Status Card -->
+      <div class="status-card">
+        <div class="status-icon" id="status-icon">⏳</div>
+        <div class="status-title" id="status-title">Request Pending</div>
+        <div class="status-message" id="status-message">
+          Your purchase request has been sent to the seller. Please wait for their response.
+        </div>
+        
+        <div id="buyer-note-section" class="note-section" style="display:none;">
+          <div class="note-label">Your Note:</div>
+          <div class="note-text" id="buyer-note"></div>
+        </div>
+        
+        <div id="seller-note-section" class="note-section" style="display:none;">
+          <div class="note-label">Seller's Response:</div>
+          <div class="note-text" id="seller-note"></div>
+        </div>
+
+        <div class="action-buttons" id="action-buttons">
+          <button class="btn-action btn-secondary-action" onclick="goToChat()">
+            💬 Message Seller
+          </button>
+          <button class="btn-action btn-primary-action" onclick="goToItem()">
+            📦 View Item
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    requireAuth();
+    var user = getUser();
+    document.getElementById('nav-username').textContent = user.name;
+    document.getElementById('avatar-initials').textContent = user.name.charAt(0).toUpperCase();
+
+    var API_BASE = (typeof API !== 'undefined') ? API : 'http://localhost:3000';
+    var purchaseId = new URLSearchParams(window.location.search).get('id');
+    var currentPurchase = null;
+    var currentItem = null;
+
+    if (!purchaseId) {
+      alert('No purchase ID provided');
+      window.location.href = 'buy.html';
+    } else {
+      loadPurchaseStatus();
+      // Auto-refresh every 10 seconds
+      setInterval(loadPurchaseStatus, 10000);
+    }
+
+    async function loadPurchaseStatus() {
+      try {
+        // Get purchase details
+        var res = await fetch(API_BASE + '/api/purchases/buyer?buyerEmail=' + encodeURIComponent(user.email));
+        var data = await res.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to load purchase');
+        }
+        
+        // Find this specific purchase
+        var purchase = data.purchases.find(function(p) { return p._id === purchaseId; });
+        if (!purchase) {
+          throw new Error('Purchase not found');
+        }
+        
+        currentPurchase = purchase;
+        
+        // Get item details
+        var itemRes = await fetch(API_BASE + '/items/' + purchase.itemId);
+        var itemData = await itemRes.json();
+        if (itemData.success && itemData.item) {
+          currentItem = itemData.item;
+        }
+        
+        renderPurchaseStatus(purchase);
+        
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('content-state').style.display = 'block';
+      } catch (err) {
+        console.error('Load error:', err);
+        document.getElementById('loading-state').innerHTML = 
+          '<div class="status-icon">⚠️</div>' +
+          '<h3>Error Loading Purchase</h3>' +
+          '<p style="color:var(--text2);">' + err.message + '</p>' +
+          '<button class="btn btn-primary" onclick="window.location.href=\'buy.html\'">Back to Browse</button>';
+      }
+    }
+
+    function renderPurchaseStatus(purchase) {
+      var status = purchase.purchaseStatus;
+      
+      // Update item info
+      if (currentItem) {
+        var imgSrc = currentItem.images && currentItem.images[0] 
+          ? API_BASE + '/uploads/' + currentItem.images[0]
+          : (currentItem.image ? API_BASE + '/uploads/' + currentItem.image : '');
+        document.getElementById('item-image').src = imgSrc;
+        document.getElementById('item-name').textContent = currentItem.name;
+        document.getElementById('item-price').textContent = '₹' + Number(currentItem.price).toLocaleString();
+      }
+      
+      // Update progress steps
+      var step1 = document.getElementById('step-1');
+      var step2 = document.getElementById('step-2');
+      var step3 = document.getElementById('step-3');
+      var progressFill = document.getElementById('progress-fill');
+      
+      // Reset
+      step1.classList.remove('active', 'completed');
+      step2.classList.remove('active', 'completed');
+      step3.classList.remove('active', 'completed');
+      
+      if (status === 'pending') {
+        step1.classList.add('completed');
+        step2.classList.add('active');
+        progressFill.style.width = '50%';
+        
+        document.getElementById('status-icon').textContent = '⏳';
+        document.getElementById('status-title').textContent = 'Waiting for Seller Approval';
+        document.getElementById('status-message').textContent = 
+          'Your purchase request has been sent to the seller. They will review and respond soon.';
+      } else if (status === 'accepted' || status === 'reserved') {
+        step1.classList.add('completed');
+        step2.classList.add('completed');
+        step3.classList.add('completed');
+        progressFill.style.width = '100%';
+        
+        document.getElementById('status-icon').textContent = '🎉';
+        document.getElementById('status-title').textContent = 'Item Reserved for You!';
+        document.getElementById('status-message').textContent = 
+          'Congratulations! The seller has accepted your request. This item is now reserved for you. Contact the seller to arrange pickup.';
+      } else if (status === 'rejected') {
+        step1.classList.add('completed');
+        step2.classList.add('completed');
+        progressFill.style.width = '100%';
+        
+        document.getElementById('status-icon').textContent = '❌';
+        document.getElementById('status-title').textContent = 'Request Declined';
+        document.getElementById('status-message').textContent = 
+          'Unfortunately, the seller has declined your purchase request. You can browse other items or contact the seller for more information.';
+      }
+      
+      // Show buyer note if exists
+      if (purchase.note) {
+        document.getElementById('buyer-note-section').style.display = 'block';
+        document.getElementById('buyer-note').textContent = purchase.note;
+      }
+      
+      // Show seller note if exists
+      if (purchase.sellerNote) {
+        document.getElementById('seller-note-section').style.display = 'block';
+        document.getElementById('seller-note').textContent = purchase.sellerNote;
+      }
+    }
+
+    function goToChat() {
+      if (!currentPurchase || !currentItem) return;
+      var sellerEmail = currentPurchase.sellerEmail;
+      var sellerName = sellerEmail.split('@')[0];
+      var itemImage = currentItem.images && currentItem.images[0] ? currentItem.images[0] : currentItem.image || '';
+      
+      window.location.href = 'chat.html?itemId=' + encodeURIComponent(currentPurchase.itemId) +
+        '&otherEmail=' + encodeURIComponent(sellerEmail) +
+        '&otherName=' + encodeURIComponent(sellerName) +
+        '&itemName=' + encodeURIComponent(currentItem.name) +
+        '&itemImage=' + encodeURIComponent(itemImage);
+    }
+
+    function goToItem() {
+      if (!currentPurchase) return;
+      window.location.href = 'product-details.html?id=' + encodeURIComponent(currentPurchase.itemId);
+    }
+  </script>
+</body>
+</html>
