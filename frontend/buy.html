@@ -12,11 +12,175 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Buy – CampusMart</title>
   <link rel="stylesheet" href="style.css" />
-<style>.nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }</style>
+<style>
+.nav-links a svg { vertical-align:middle; margin-right:0.25rem; flex-shrink:0; }
+
+/* ── Order Confirmation Modal ── */
+.order-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:600;
+  display:none; align-items:center; justify-content:center;
+  padding:1rem;
+  backdrop-filter:blur(4px);
+}
+.order-overlay.open { display:flex; }
+.order-modal {
+  background:#fff; border-radius:22px; padding:2rem;
+  width:100%; max-width:460px;
+  box-shadow:0 24px 72px rgba(0,0,0,0.2);
+  animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+.order-modal-header { display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; }
+.order-modal-icon {
+  width:52px; height:52px; border-radius:14px;
+  background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+  display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0;
+}
+.order-modal-header h3 { font-size:1.15rem; font-weight:900; color:#111827; margin-bottom:0.15rem; }
+.order-modal-header p  { font-size:0.82rem; color:#6b7280; }
+
+.order-item-preview {
+  background:#f9fafb; border:1.5px solid #e5e7eb; border-radius:14px;
+  padding:1rem 1.25rem; display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem;
+}
+.order-item-img {
+  width:56px; height:56px; border-radius:10px; background:#ede9fe;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; flex-shrink:0; overflow:hidden;
+}
+.order-item-img img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+.order-item-details .order-item-name  { font-weight:800; font-size:0.95rem; color:#111827; }
+.order-item-details .order-item-price { font-size:0.88rem; color:#7c3aed; font-weight:700; margin-top:0.2rem; }
+.order-item-details .order-item-cat   { font-size:0.78rem; color:#9ca3af; margin-top:0.1rem; }
+
+.order-note-label { font-size:0.8rem; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.4rem; }
+.order-note-input {
+  width:100%; padding:0.75rem 1rem; border:1.5px solid #e5e7eb;
+  border-radius:10px; font-size:0.9rem; font-family:inherit;
+  resize:none; min-height:80px; outline:none; color:#111827;
+  transition:border-color 0.18s;
+}
+.order-note-input:focus { border-color:#7c3aed; }
+.order-char-count { text-align:right; font-size:0.72rem; color:#9ca3af; margin-top:0.25rem; margin-bottom:1rem; }
+
+.order-modal-btns { display:flex; gap:0.75rem; margin-top:0.5rem; }
+.order-btn-cancel {
+  flex:1; padding:0.7rem; background:#f3f4f6; color:#6b7280;
+  border:none; border-radius:10px; font-size:0.9rem; font-weight:700;
+  cursor:pointer; font-family:inherit; transition:background 0.18s;
+}
+.order-btn-cancel:hover { background:#e5e7eb; }
+.order-btn-confirm {
+  flex:2; padding:0.7rem;
+  background:linear-gradient(135deg,#7c3aed,#6d28d9);
+  color:#fff; border:none; border-radius:10px;
+  font-size:0.9rem; font-weight:700; cursor:pointer;
+  font-family:inherit; transition:opacity 0.18s;
+}
+.order-btn-confirm:hover:not(:disabled) { opacity:0.88; }
+.order-btn-confirm:disabled { opacity:0.55; cursor:not-allowed; }
+
+.order-alert {
+  padding:0.65rem 0.9rem; border-radius:8px;
+  font-size:0.83rem; font-weight:600; margin-bottom:1rem; display:none;
+}
+.order-alert.show { display:block; }
+.order-alert.error   { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+.order-alert.success { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+
+/* Success step */
+.order-success-step { text-align:center; padding:0.5rem 0 0.25rem; }
+.order-success-step .os-icon { font-size:3.5rem; margin-bottom:0.75rem; }
+.order-success-step h3 { font-size:1.2rem; font-weight:900; color:#059669; margin-bottom:0.5rem; }
+.order-success-step p  { font-size:0.88rem; color:#6b7280; line-height:1.6; }
+.order-success-step .os-info {
+  background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;
+  padding:0.85rem 1rem; margin:1rem 0; text-align:left;
+  font-size:0.85rem; color:#065f46; line-height:1.6;
+}
+
+/* Buy button on cards */
+.btn-buy-item {
+  flex:1; padding:0.55rem 0.75rem;
+  background:linear-gradient(135deg,#7c3aed,#6d28d9);
+  color:#fff; border:none; border-radius:10px;
+  font-size:0.82rem; font-weight:700; cursor:pointer;
+  font-family:inherit; transition:opacity 0.18s, transform 0.15s;
+  white-space:nowrap;
+}
+.btn-buy-item:hover:not(:disabled) { opacity:0.88; transform:translateY(-1px); }
+.btn-buy-item:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+.btn-buy-item.ordered { background:linear-gradient(135deg,#6b7280,#4b5563); }
+.btn-buy-item.accepted { background:linear-gradient(135deg,#059669,#047857); }
+
+/* Side-by-side action buttons */
+.item-actions { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.btn-contact.btn-chat-seller { flex:1; }
+</style>
 </head>
 <body>
 
-  <!-- ── FILTER DRAWER OVERLAY ─────────────────────────────────────── -->
+<!-- ── Order Confirmation Modal ── -->
+<div class="order-overlay" id="order-overlay">
+  <div class="order-modal">
+
+    <!-- Step 1: Confirm -->
+    <div id="order-step1">
+      <div class="order-modal-header">
+        <div class="order-modal-icon">🛒</div>
+        <div>
+          <h3>Confirm Your Order</h3>
+          <p>Send a purchase request to the seller</p>
+        </div>
+      </div>
+
+      <div class="order-item-preview" id="order-item-preview">
+        <div class="order-item-img" id="order-item-img">📦</div>
+        <div class="order-item-details">
+          <div class="order-item-name" id="order-item-name">—</div>
+          <div class="order-item-price" id="order-item-price">—</div>
+          <div class="order-item-cat" id="order-item-cat">—</div>
+        </div>
+      </div>
+
+      <div class="order-alert" id="order-alert"></div>
+
+      <div class="order-note-label">Message to Seller <span style="font-weight:400;color:#9ca3af;">(optional)</span></div>
+      <textarea class="order-note-input" id="order-note"
+        placeholder="e.g. I can meet on campus tomorrow afternoon. Is the price negotiable?"
+        maxlength="500"></textarea>
+      <div class="order-char-count"><span id="order-char">0</span> / 500</div>
+
+      <div class="order-modal-btns">
+        <button class="order-btn-cancel" onclick="closeOrderModal()">Cancel</button>
+        <button class="order-btn-confirm" id="order-confirm-btn" onclick="submitOrder()">🛒 Confirm Order</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Success -->
+    <div id="order-step2" style="display:none;">
+      <div class="order-success-step">
+        <div class="os-icon">✅</div>
+        <h3>Order Request Sent!</h3>
+        <p>Your purchase request has been sent to the seller.</p>
+        <div class="os-info" id="order-success-info">
+          📬 The seller will review your request and accept or reject it.<br>
+          🔔 Check your <strong>My Orders</strong> section in your profile for updates.<br>
+          💬 You can also message the seller directly via chat.
+        </div>
+        <div class="order-modal-btns">
+          <button class="order-btn-cancel" onclick="closeOrderModal()">Close</button>
+          <button class="order-btn-confirm" onclick="closeOrderModal(); window.location.href='dashboard.html'">Go to Dashboard</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── FILTER DRAWER OVERLAY ─────────────────────────────────────── -->
   <div class="filter-overlay" id="filter-overlay" onclick="closeFilterPanel()"></div>
 
   <!-- ── FILTER DRAWER ─────────────────────────────────────────────── -->
@@ -86,6 +250,7 @@
       <a href="sell.html">&#129689; <span>Sell</span></a>
       <a href="buy.html" class="active">&#128722; <span>Buy</span></a>
       <a href="chat.html">&#128172; <span>Chat</span></a>
+      <a href="requests.html">&#9203; <span>Requests</span></a>
     </div>
     <div class="nav-user">
       <a href="settings.html" title="Profile" style="text-decoration:none;"><div class="avatar" id="avatar-initials">?</div></a>
@@ -327,9 +492,17 @@
         filtered.length + ' item' + (filtered.length !== 1 ? 's' : '') + ' found';
 
       renderItems(filtered);
+      // Mark items the buyer already ordered
+      setTimeout(markExistingOrders, 80);
     }
 
-    // ── Toast ────────────────────────────────────────────────────────
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    loadItems();
     function showToast(msg, type) {
       type = type || 'success';
       let t = document.getElementById('toast');
@@ -363,7 +536,9 @@
       const condMap = { New:'condition-new', Good:'condition-good', Used:'condition-used' };
 
       grid.innerHTML = items.map(function (item) {
-        const isSold     = item.sold;
+        // Hard filter — never render sold or reserved items
+        if (item.sold || item.item_status === 'Sold' || item.item_status === 'Reserved') return '';
+
         const isOwn      = user.id && item.user_id && item.user_id.toString() === user.id.toString();
         const icon       = catIcons[item.category] || '📦';
         const isExchange = (item.deal_type === 'exchange');
@@ -397,22 +572,20 @@
           ? '<span class="mc-deal-chip exchange-chip">🔄 Exchange</span>' : '';
 
         let actions = '';
-        if (isSold) {
-          actions = '<button class="btn-sold" disabled>✅ Sold</button>';
-        } else if (isOwn) {
+        if (isOwn) {
           actions = '<div class="own-listing-badge">📌 Your Listing</div>'
             + '<button class="btn-mark-sold" onclick="markSold(\'' + item._id + '\',this)">Mark as Sold</button>';
         } else {
-          actions = '<button class="btn-buy-item" onclick="viewPurchase(event,\'' + item._id + '\')">&#128722; Buy Item</button>' + '<button class="btn-contact btn-chat-seller" onclick="messageSeller(event,\'' + item._id + '\')">&#128172; Message Seller</button>';
+          actions = '<button class="btn-buy-item" id="buy-btn-' + item._id + '" onclick="openOrderModal(event,\'' + item._id + '\')">🛒 Buy Item</button>'
+            + '<button class="btn-contact btn-chat-seller" onclick="messageSeller(event,\'' + item._id + '\')">💬 Message Seller</button>';
         }
 
-        return '<div class="mc-card ' + (isSold ? 'mc-sold' : '') + '" id="card-' + item._id + '" onclick="viewProduct(\'' + item._id + '\')">'
+        return '<div class="mc-card" id="card-' + item._id + '">'
 
           + '<div class="mc-img-wrap">'
             + mainImgHtml
             + '<span class="mc-category-badge">' + esc(item.category) + '</span>'
             + dealChip
-            + (isSold ? '<div class="sold-overlay">SOLD</div>' : '')
             + '<span class="mc-condition ' + (condMap[item.condition] || '') + '">' + esc(item.condition) + '</span>'
           + '</div>'
           + thumbsHtml
@@ -488,7 +661,7 @@
     }
 
     async function markSold(itemId, btn) {
-      if (!confirm('Mark this item as SOLD?')) return;
+      if (!confirm('Mark this item as SOLD? It will be removed from the marketplace immediately.')) return;
       btn.disabled = true; btn.textContent = 'Updating...';
       try {
         const res  = await fetch(API + '/items/' + itemId + '/sold', {
@@ -496,43 +669,160 @@
           body: JSON.stringify({ user_id: user.id })
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error); btn.disabled=false; btn.textContent='Mark as Sold'; return; }
+        if (!res.ok) {
+          alert(data.error);
+          btn.disabled = false; btn.textContent = 'Mark as Sold';
+          return;
+        }
+        // Remove the card from the grid immediately — sold items are not shown
         const card = document.getElementById('card-' + itemId);
         if (card) {
-          const wrap = card.querySelector('.mc-img-wrap');
-          if (wrap && !wrap.querySelector('.sold-overlay')) {
-            const ov = document.createElement('div');
-            ov.className='sold-overlay'; ov.textContent='SOLD'; wrap.appendChild(ov);
-          }
-          card.classList.add('mc-sold');
-          card.querySelector('.item-actions').innerHTML = '<button class="btn-sold" disabled>✅ Sold</button>';
+          card.style.transition = 'opacity 0.3s, transform 0.3s';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            card.remove();
+            // Update allItems array and results count
+            allItems = allItems.filter(function(i) { return i._id !== itemId; });
+            const countEl = document.getElementById('results-count');
+            if (countEl) countEl.textContent = allItems.length + ' item' + (allItems.length !== 1 ? 's' : '') + ' found';
+            // Show empty state if no items left
+            const grid = document.getElementById('items-grid');
+            if (grid && !grid.querySelector('.mc-card')) {
+              grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">🔍</div><h3>No items found</h3><p>Try adjusting your search or filters.</p></div>';
+            }
+          }, 300);
         }
-        const idx = allItems.findIndex(function(i){ return i._id===itemId; });
-        if (idx !== -1) allItems[idx].sold = true;
-      } catch(e) { alert('Network error.'); btn.disabled=false; btn.textContent='Mark as Sold'; }
+      } catch(e) {
+        alert('Network error.');
+        btn.disabled = false; btn.textContent = 'Mark as Sold';
+      }
+    }
+
+    // ── Order Confirmation Modal ─────────────────────────────────
+    var _orderItemId = null;
+
+    // After render, check which items the user already ordered
+    async function markExistingOrders() {
+      if (!allItems.length) return;
+      try {
+        var res  = await fetch(API + '/api/purchases/buyer?buyerEmail=' + encodeURIComponent(user.email));
+        var data = await res.json();
+        if (!data.success) return;
+        data.purchases.forEach(function(p) {
+          var itemId = p.itemId;
+          if (!itemId) return;
+          var btn = document.getElementById('buy-btn-' + itemId);
+          if (!btn) return;
+          if (p.purchaseStatus === 'pending') {
+            btn.textContent = '⏳ Order Sent';
+            btn.classList.add('ordered');
+            btn.disabled = true;
+          } else if (p.purchaseStatus === 'accepted') {
+            btn.textContent = '✅ Order Accepted';
+            btn.classList.add('accepted');
+            btn.disabled = true;
+          } else if (p.purchaseStatus === 'rejected') {
+            // Allow re-order after rejection — reset button
+            btn.textContent = '🛒 Buy Item';
+            btn.disabled = false;
+          }
+        });
+      } catch(e) { /* silent */ }
+    }
+
+    function openOrderModal(e, itemId) {
+      e.stopPropagation();
+      var item = allItems.find(function(i) { return i._id === itemId; });
+      if (!item) return;
+      _orderItemId = itemId;
+
+      // Populate preview
+      var imgEl = document.getElementById('order-item-img');
+      var imgs = (item.images && item.images.length) ? item.images : (item.image ? [item.image] : []);
+      if (imgs.length) {
+        imgEl.innerHTML = '<img src="' + API + '/uploads/' + imgs[0] + '" onerror="this.parentElement.textContent=\'📦\'" />';
+      } else {
+        imgEl.textContent = '📦';
+      }
+      document.getElementById('order-item-name').textContent  = item.name;
+      document.getElementById('order-item-price').textContent = item.deal_type === 'exchange'
+        ? '🔄 Exchange: ' + (item.exchange_for || 'See details')
+        : '₹' + Number(item.price).toLocaleString();
+      document.getElementById('order-item-cat').textContent   = item.category + ' · ' + item.condition;
+      document.getElementById('order-note').value = '';
+      document.getElementById('order-char').textContent = '0';
+      document.getElementById('order-alert').className = 'order-alert';
+      document.getElementById('order-alert').textContent = '';
+      document.getElementById('order-step1').style.display = 'block';
+      document.getElementById('order-step2').style.display = 'none';
+      document.getElementById('order-confirm-btn').disabled = false;
+      document.getElementById('order-confirm-btn').textContent = '🛒 Confirm Order';
+      document.getElementById('order-overlay').classList.add('open');
+    }
+
+    document.getElementById('order-note').addEventListener('input', function() {
+      document.getElementById('order-char').textContent = this.value.length;
+    });
+
+    document.getElementById('order-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeOrderModal();
+    });
+
+    function closeOrderModal() {
+      document.getElementById('order-overlay').classList.remove('open');
+      _orderItemId = null;
+    }
+
+    async function submitOrder() {
+      if (!_orderItemId) return;
+      var note    = document.getElementById('order-note').value.trim();
+      var alertEl = document.getElementById('order-alert');
+      var btn     = document.getElementById('order-confirm-btn');
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      alertEl.className = 'order-alert';
+
+      try {
+        var res  = await fetch(API + '/api/purchase', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ itemId: _orderItemId, buyerEmail: user.email, note: note })
+        });
+        var data = await res.json();
+
+        if (!res.ok) {
+          alertEl.className = 'order-alert error show';
+          alertEl.textContent = data.error || 'Failed to send order.';
+          btn.disabled = false;
+          btn.textContent = '🛒 Confirm Order';
+        } else {
+          // Show success step
+          document.getElementById('order-step1').style.display = 'none';
+          document.getElementById('order-step2').style.display = 'block';
+          // Update button on card
+          var buyBtn = document.getElementById('buy-btn-' + _orderItemId);
+          if (buyBtn) {
+            buyBtn.textContent = '⏳ Order Sent';
+            buyBtn.classList.add('ordered');
+            buyBtn.disabled = true;
+          }
+        }
+      } catch(err) {
+        alertEl.className = 'order-alert error show';
+        alertEl.textContent = 'Cannot connect to server. Is it running?';
+        btn.disabled = false;
+        btn.textContent = '🛒 Confirm Order';
+      }
     }
 
     function viewProduct(itemId) {
-      window.location.href = 'product-details.html?id=' + encodeURIComponent(itemId);
+      // no-op or detail view — keep for future use
     }
 
-    function esc(str) {
-      const d = document.createElement('div');
-      d.textContent = str || '';
-      return d.innerHTML;
-    }
-
-    function goToPurchasePage(e,itemId){
-      e.stopPropagation();
-      window.location.href="purchase.html?id="+encodeURIComponent(itemId);
-    }
-
-    function viewPurchase(e, itemId) {
-      e.stopPropagation();
-      window.location.href = 'purchase.html?id=' + encodeURIComponent(itemId);
-    }
-
-    loadItems();
+    function goToPurchasePage(e, itemId) { openOrderModal(e, itemId); }
+    function viewPurchase(e, itemId)     { openOrderModal(e, itemId); }
   
   </script>
 

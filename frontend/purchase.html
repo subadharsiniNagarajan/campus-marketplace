@@ -259,6 +259,8 @@
       try {
         var res  = await fetch(API_BASE + '/items/' + id);
         var data = await res.json();
+        // 410 = item is sold/reserved — no longer available
+        if (res.status === 410 || (data && data.gone)) { showError(); return; }
         if (!res.ok || !data.item) { showError(); return; }
         currentItem = data.item;
         renderItem(data.item);

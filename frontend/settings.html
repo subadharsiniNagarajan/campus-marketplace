@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profile - CampusMart</title>
+  <title>Profile – CampusMart</title>
   <link rel="stylesheet" href="style.css" />
   <script>
     if (window.location.protocol === "file:") {
@@ -12,349 +12,222 @@
     }
   </script>
   <style>
-    /* ── Page wrapper ── */
-    .profile-page {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 4rem;
-    }
+    .profile-page { max-width:960px; margin:0 auto; padding:2rem 1.5rem 4rem; }
 
-    /* ── Profile Header Card ── */
+    /* ── Header Card ── */
     .profile-header-card {
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.75rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      box-shadow: var(--shadow);
-      margin-bottom: 0;
+      background:var(--card); border:1.5px solid var(--border);
+      border-radius:var(--radius-lg); padding:1.75rem 2rem;
+      display:flex; align-items:center; gap:1.5rem;
+      box-shadow:var(--shadow); margin-bottom:0;
     }
-
-    .profile-avatar-wrap {
-      position: relative;
-      flex-shrink: 0;
-    }
-
+    .profile-avatar-wrap { position:relative; flex-shrink:0; }
     .profile-avatar-circle {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--p1) 0%, var(--pink) 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 2rem;
-      font-weight: 900;
-      box-shadow: 0 6px 20px rgba(124,58,237,0.35);
-      letter-spacing: -1px;
+      width:80px; height:80px; border-radius:50%;
+      background:linear-gradient(135deg,var(--p1) 0%,var(--pink) 100%);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:2rem; font-weight:900;
+      box-shadow:0 6px 20px rgba(124,58,237,0.35);
     }
-
     .profile-online-dot {
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-      width: 14px;
-      height: 14px;
-      background: #10b981;
-      border-radius: 50%;
-      border: 2.5px solid #fff;
+      position:absolute; bottom:4px; right:4px;
+      width:14px; height:14px; background:#10b981;
+      border-radius:50%; border:2.5px solid #fff;
     }
-
-    .profile-header-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .profile-header-info h2 {
-      font-size: 1.4rem;
-      font-weight: 900;
-      color: var(--text);
-      letter-spacing: -0.3px;
-      margin-bottom: 0.2rem;
-    }
-
+    .profile-header-info { flex:1; min-width:0; }
+    .profile-header-info h2 { font-size:1.4rem; font-weight:900; color:var(--text); margin-bottom:0.2rem; }
     .profile-header-info .profile-email {
-      font-size: 0.88rem;
-      color: var(--text2);
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
+      font-size:0.88rem; color:var(--text2); margin-bottom:0.5rem;
+      display:flex; align-items:center; gap:0.4rem;
     }
-
-    .profile-header-info .profile-badges {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
+    .profile-header-info .profile-badges { display:flex; gap:0.5rem; flex-wrap:wrap; }
     .profile-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      padding: 0.22rem 0.7rem;
-      border-radius: 20px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      background: var(--bg2);
-      color: var(--p1);
-      border: 1px solid var(--border2);
+      display:inline-flex; align-items:center; gap:0.3rem;
+      padding:0.22rem 0.7rem; border-radius:20px;
+      font-size:0.72rem; font-weight:700;
+      background:var(--bg2); color:var(--p1); border:1px solid var(--border2);
     }
-
-    .profile-chip.verified {
-      background: rgba(16,185,129,0.1);
-      color: #059669;
-      border-color: rgba(16,185,129,0.3);
-    }
-
-    .profile-header-actions {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.5rem;
-      flex-shrink: 0;
-    }
+    .profile-chip.verified { background:rgba(16,185,129,0.1); color:#059669; border-color:rgba(16,185,129,0.3); }
+    .profile-header-actions { display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem; flex-shrink:0; }
 
     /* ── Tab Bar ── */
     .profile-tabs {
-      display: flex;
-      gap: 0;
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-      overflow: hidden;
-      margin-bottom: 1.75rem;
+      display:flex; background:var(--card);
+      border:1.5px solid var(--border); border-top:none;
+      border-radius:0 0 var(--radius-lg) var(--radius-lg);
+      overflow-x:auto; margin-bottom:1.75rem; scrollbar-width:none;
     }
-
+    .profile-tabs::-webkit-scrollbar { display:none; }
     .profile-tab {
-      flex: 1;
-      padding: 0.85rem 1rem;
-      text-align: center;
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--text2);
-      cursor: pointer;
-      border: none;
-      background: none;
-      border-bottom: 3px solid transparent;
-      transition: all 0.18s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      font-family: inherit;
+      flex:1; min-width:max-content; padding:0.8rem 1rem;
+      text-align:center; font-size:0.82rem; font-weight:700;
+      color:var(--text2); cursor:pointer; border:none; background:none;
+      border-bottom:3px solid transparent; transition:all 0.18s;
+      display:flex; align-items:center; justify-content:center; gap:0.35rem;
+      font-family:inherit; white-space:nowrap;
     }
-
-    .profile-tab:hover {
-      color: var(--p1);
-      background: var(--bg);
-    }
-
-    .profile-tab.active {
-      color: var(--p1);
-      border-bottom-color: var(--p1);
-      background: var(--bg2);
+    .profile-tab:hover { color:var(--p1); background:var(--bg); }
+    .profile-tab.active { color:var(--p1); border-bottom-color:var(--p1); background:var(--bg2); }
+    .tab-badge {
+      background:var(--p1); color:#fff; border-radius:10px;
+      padding:0.05rem 0.45rem; font-size:0.65rem; font-weight:800;
     }
 
     /* ── Tab Panels ── */
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
 
     /* ── Section Card ── */
     .section-card {
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.75rem;
-      box-shadow: var(--shadow);
-      margin-bottom: 1.25rem;
+      background:var(--card); border:1.5px solid var(--border);
+      border-radius:var(--radius-lg); padding:1.75rem;
+      box-shadow:var(--shadow); margin-bottom:1.25rem;
     }
-
     .section-card-title {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
+      display:flex; align-items:center; gap:0.75rem;
+      margin-bottom:1.25rem; padding-bottom:1rem; border-bottom:1px solid var(--border);
     }
-
     .section-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      flex-shrink: 0;
+      width:40px; height:40px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.2rem; flex-shrink:0;
     }
-
-    .si-purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
-    .si-pink   { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
-    .si-green  { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
-    .si-blue   { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
-
-    .section-card-title h3 {
-      font-size: 1rem;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 0.1rem;
-    }
-
-    .section-card-title p {
-      font-size: 0.8rem;
-      color: var(--text2);
-    }
-
-    /* ── Info Row ── */
-    .info-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border);
-      gap: 1rem;
-    }
-
-    .info-row:last-child { border-bottom: none; }
-
-    .info-label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text2);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      flex-shrink: 0;
-    }
-
-    .info-value {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text);
-      text-align: right;
-    }
+    .si-purple { background:linear-gradient(135deg,#ede9fe,#ddd6fe); }
+    .si-pink   { background:linear-gradient(135deg,#fce7f3,#fbcfe8); }
+    .si-green  { background:linear-gradient(135deg,#d1fae5,#a7f3d0); }
+    .si-blue   { background:linear-gradient(135deg,#dbeafe,#bfdbfe); }
+    .si-orange { background:linear-gradient(135deg,#fef3c7,#fde68a); }
+    .si-teal   { background:linear-gradient(135deg,#ccfbf1,#99f6e4); }
+    .si-red    { background:rgba(239,68,68,0.1); }
+    .section-card-title h3 { font-size:1rem; font-weight:800; color:var(--text); margin-bottom:0.1rem; }
+    .section-card-title p  { font-size:0.8rem; color:var(--text2); }
 
     /* ── Stats Grid ── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-    }
-
+    .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
     .stat-tile {
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.1rem 1.25rem;
-      text-align: center;
+      background:var(--bg); border:1.5px solid var(--border);
+      border-radius:var(--radius); padding:1.1rem 1rem; text-align:center;
     }
+    .stat-tile .st-num { font-size:1.8rem; font-weight:900; color:var(--p1); line-height:1; margin-bottom:0.3rem; }
+    .stat-tile .st-label { font-size:0.75rem; color:var(--text2); font-weight:600; }
 
-    .stat-tile .st-num {
-      font-size: 1.8rem;
-      font-weight: 900;
-      color: var(--p1);
-      line-height: 1;
-      margin-bottom: 0.3rem;
+    /* ── Info rows ── */
+    .info-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0.75rem 0; border-bottom:1px solid var(--border); gap:1rem;
     }
+    .info-row:last-child { border-bottom:none; }
+    .info-label { font-size:0.8rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; flex-shrink:0; }
+    .info-value { font-size:0.9rem; font-weight:600; color:var(--text); text-align:right; }
 
-    .stat-tile .st-label {
-      font-size: 0.78rem;
-      color: var(--text2);
-      font-weight: 600;
+    /* ── Activity rows (shared across purchase/sale/listing rows) ── */
+    .activity-row {
+      display:flex; align-items:center; gap:0.9rem;
+      padding:0.85rem 0; border-bottom:1px solid var(--border);
     }
+    .activity-row:last-child { border-bottom:none; }
+    .ar-thumb {
+      width:52px; height:52px; border-radius:10px;
+      background:var(--bg2); display:flex; align-items:center;
+      justify-content:center; font-size:1.3rem; flex-shrink:0; overflow:hidden;
+    }
+    .ar-thumb img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+    .ar-info { flex:1; min-width:0; }
+    .ar-name { font-weight:700; font-size:0.92rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ar-sub  { font-size:0.78rem; color:var(--text2); margin-top:0.15rem; }
+    .ar-note { font-size:0.75rem; color:var(--text3); font-style:italic; margin-top:0.1rem; }
+    .ar-right { display:flex; flex-direction:column; align-items:flex-end; gap:0.35rem; flex-shrink:0; }
+    .ar-date  { font-size:0.72rem; color:var(--text3); }
 
-    /* ── Form elements ── */
-    .input-with-eye { position: relative; }
-    .input-with-eye input { padding-right: 2.8rem; }
+    /* ── Status badges ── */
+    .sbadge {
+      display:inline-flex; align-items:center; padding:0.2rem 0.65rem;
+      border-radius:20px; font-size:0.7rem; font-weight:800;
+      text-transform:uppercase; white-space:nowrap;
+    }
+    .sb-pending    { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.35); }
+    .sb-accepted   { background:rgba(16,185,129,0.12);  color:#059669; border:1px solid rgba(16,185,129,0.35); }
+    .sb-rejected   { background:rgba(239,68,68,0.12);   color:#dc2626; border:1px solid rgba(239,68,68,0.35); }
+    .sb-complete   { background:rgba(124,58,237,0.12);  color:#7c3aed; border:1px solid rgba(124,58,237,0.35); }
+    .sb-available  { background:rgba(16,185,129,0.12);  color:#059669; border:1px solid rgba(16,185,129,0.35); }
+    .sb-reserved   { background:rgba(245,158,11,0.12);  color:#d97706; border:1px solid rgba(245,158,11,0.35); }
+    .sb-sold       { background:rgba(107,114,128,0.12); color:#4b5563; border:1px solid rgba(107,114,128,0.35); }
+    .sb-mod-pending    { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.35); }
+    .sb-mod-approved   { background:rgba(16,185,129,0.12);  color:#059669; border:1px solid rgba(16,185,129,0.35); }
+    .sb-mod-rejected   { background:rgba(239,68,68,0.12);   color:#dc2626; border:1px solid rgba(239,68,68,0.35); }
+    .sb-mod-correction { background:rgba(59,130,246,0.12);  color:#2563eb; border:1px solid rgba(59,130,246,0.35); }
 
+    /* ── Grouping header inside listings ── */
+    .group-header {
+      font-size:0.75rem; font-weight:800; text-transform:uppercase;
+      letter-spacing:0.6px; color:var(--text3); padding:0.9rem 0 0.4rem;
+      display:flex; align-items:center; gap:0.5rem;
+    }
+    .group-header::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── Action buttons on sale rows ── */
+    .btn-accept-sm {
+      padding:0.32rem 0.75rem; background:linear-gradient(135deg,#10b981,#059669);
+      color:#fff; border:none; border-radius:7px;
+      font-size:0.75rem; font-weight:700; cursor:pointer; font-family:inherit;
+    }
+    .btn-accept-sm:hover { opacity:0.88; }
+    .btn-reject-sm {
+      padding:0.32rem 0.75rem; background:#f3f4f6; color:#6b7280;
+      border:1px solid #e5e7eb; border-radius:7px;
+      font-size:0.75rem; font-weight:700; cursor:pointer; font-family:inherit;
+    }
+    .btn-reject-sm:hover { background:#fee2e2; color:#dc2626; border-color:#fecaca; }
+    .btn-cancel-sm {
+      padding:0.32rem 0.75rem; background:#f3f4f6; color:#6b7280;
+      border:1px solid #e5e7eb; border-radius:7px;
+      font-size:0.75rem; font-weight:700; cursor:pointer; font-family:inherit;
+    }
+    .btn-cancel-sm:hover { background:#fee2e2; color:#dc2626; border-color:#fecaca; }
+
+    /* ── Form helpers ── */
+    .input-with-eye { position:relative; }
+    .input-with-eye input { padding-right:2.8rem; }
     .eye-btn {
-      position: absolute;
-      right: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text3);
-      padding: 0.2rem;
-      display: flex;
-      align-items: center;
-      transition: color 0.15s;
+      position:absolute; right:0.75rem; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer; color:var(--text3);
+      padding:0.2rem; display:flex; align-items:center; transition:color 0.15s;
     }
-    .eye-btn:hover { color: var(--p1); }
-
-    .password-strength {
-      margin-top: 0.4rem;
-      height: 4px;
-      border-radius: 99px;
-      background: var(--border);
-      overflow: hidden;
-    }
-    .strength-bar {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.3s, background 0.3s;
-      width: 0%;
-    }
-    .strength-label {
-      font-size: 0.72rem;
-      font-weight: 600;
-      margin-top: 0.3rem;
-    }
-
+    .eye-btn:hover { color:var(--p1); }
+    .password-strength { margin-top:0.4rem; height:4px; border-radius:99px; background:var(--border); overflow:hidden; }
+    .strength-bar { height:100%; border-radius:99px; transition:width 0.3s,background 0.3s; width:0%; }
+    .strength-label { font-size:0.72rem; font-weight:600; margin-top:0.3rem; }
     .current-info {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0.6rem 0.9rem;
-      font-size: 0.85rem;
-      color: var(--text2);
-      margin-bottom: 1.1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm);
+      padding:0.6rem 0.9rem; font-size:0.85rem; color:var(--text2);
+      margin-bottom:1.1rem; display:flex; align-items:center; gap:0.5rem;
     }
-    .current-info strong { color: var(--text); }
+    .current-info strong { color:var(--text); }
+    .form-divider { height:1px; background:var(--border); margin:1.1rem 0; }
 
-    .form-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 1.1rem 0;
+    /* ── Empty state ── */
+    .empty-msg {
+      text-align:center; padding:2.5rem 1rem; color:var(--text3); font-size:0.88rem;
     }
-
-    /* ── Danger zone ── */
-    .danger-zone {
-      border-color: rgba(239,68,68,0.3);
-    }
-    .danger-zone .section-card-title {
-      border-bottom-color: rgba(239,68,68,0.15);
-    }
+    .empty-msg a { color:var(--p1); font-weight:700; text-decoration:none; }
 
     /* ── Responsive ── */
-    @media (max-width: 640px) {
-      .profile-header-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 1.5rem;
-      }
-      .profile-header-info .profile-email { justify-content: center; }
-      .profile-header-info .profile-badges { justify-content: center; }
-      .profile-header-actions { align-items: center; flex-direction: row; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .profile-tabs { overflow-x: auto; }
-      .profile-tab { white-space: nowrap; font-size: 0.82rem; padding: 0.75rem 0.85rem; }
-      .profile-page { padding: 1rem 1rem 3rem; }
-      .section-card { padding: 1.25rem; }
+    @media (max-width:640px) {
+      .profile-header-card { flex-direction:column; text-align:center; padding:1.5rem; }
+      .profile-header-info .profile-email { justify-content:center; }
+      .profile-header-info .profile-badges { justify-content:center; }
+      .profile-header-actions { align-items:center; flex-direction:row; }
+      .stats-grid { grid-template-columns:1fr 1fr 1fr; }
+      .profile-page { padding:1rem 1rem 3rem; }
+      .section-card { padding:1.25rem; }
+      .ar-right { display:none; }
+    }
+    @media (max-width:480px) {
+      .stats-grid { grid-template-columns:1fr 1fr; }
     }
   </style>
 </head>
 <body>
-  <!-- Navbar -->
   <nav class="navbar">
     <div class="logo">Campus<span>Mart</span></div>
     <div class="nav-links">
@@ -362,6 +235,7 @@
       <a href="sell.html">&#129689; <span>Sell</span></a>
       <a href="buy.html">&#128722; <span>Buy</span></a>
       <a href="chat.html">&#128172; <span>Chat</span></a>
+      <a href="requests.html">&#9203; <span>Requests</span></a>
     </div>
     <div class="nav-user">
       <div class="avatar" id="avatar-initials">?</div>
@@ -372,13 +246,12 @@
 
   <div class="profile-page">
 
-    <!-- ── Profile Header Card ── -->
+    <!-- ── Profile Header ── -->
     <div class="profile-header-card">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar-circle" id="profile-avatar-circle">S</div>
         <div class="profile-online-dot"></div>
       </div>
-
       <div class="profile-header-info">
         <h2 id="profile-name">Loading...</h2>
         <div class="profile-email">
@@ -390,139 +263,114 @@
           <span class="profile-chip" id="profile-member-chip">Member</span>
         </div>
       </div>
-
       <div class="profile-header-actions">
-        <button class="btn btn-secondary" onclick="switchTab('settings')" style="font-size:0.82rem;padding:0.42rem 1rem;">
-          Edit Profile
-        </button>
-        <button class="btn btn-danger" onclick="logout()" style="font-size:0.82rem;">
-          Logout
-        </button>
+        <button class="btn btn-secondary" onclick="switchTab('settings')" style="font-size:0.82rem;padding:0.42rem 1rem;">Edit Profile</button>
+        <button class="btn btn-danger" onclick="logout()" style="font-size:0.82rem;">Logout</button>
       </div>
     </div>
 
     <!-- ── Tab Bar ── -->
     <div class="profile-tabs">
-      <button class="profile-tab active" id="tab-profile" onclick="switchTab('profile')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Profile
-      </button>
-      <button class="profile-tab" id="tab-activity" onclick="switchTab('activity')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Activity
-      </button>
-      <button class="profile-tab" id="tab-settings" onclick="switchTab('settings')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Settings
-      </button>
+      <button class="profile-tab active" id="tab-profile"   onclick="switchTab('profile')">&#128100; Profile</button>
+      <button class="profile-tab" id="tab-listings"         onclick="switchTab('listings')">&#128230; My Listings</button>
+      <button class="profile-tab" id="tab-purchases"        onclick="switchTab('purchases')">&#128722; My Purchases</button>
+      <button class="profile-tab" id="tab-sales"            onclick="switchTab('sales')">&#128200; My Sales</button>
+      <button class="profile-tab" id="tab-history"          onclick="switchTab('history')">&#128196; History</button>
+      <button class="profile-tab" id="tab-settings"         onclick="switchTab('settings')">&#9881; Settings</button>
     </div>
 
-    <!-- ══════════════════════════════════════════════ -->
-    <!-- TAB: PROFILE                                   -->
-    <!-- ══════════════════════════════════════════════ -->
+    <!-- ══════════════════ TAB: PROFILE ══════════════════ -->
     <div class="tab-panel active" id="panel-profile">
-
-      <!-- Account Info -->
       <div class="section-card">
         <div class="section-card-title">
           <div class="section-icon si-purple">&#128100;</div>
-          <div>
-            <h3>Account Information</h3>
-            <p>Your registered details</p>
-          </div>
+          <div><h3>Account Information</h3><p>Your registered details</p></div>
         </div>
-        <div class="info-row">
-          <span class="info-label">Full Name</span>
-          <span class="info-value" id="info-name">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Email</span>
-          <span class="info-value" id="info-email">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Account Type</span>
-          <span class="info-value">Student Seller</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Status</span>
-          <span class="info-value" style="color:#059669;font-weight:700;">&#10003; Active</span>
-        </div>
+        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value" id="info-name">-</span></div>
+        <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="info-email">-</span></div>
+        <div class="info-row"><span class="info-label">Account Type</span><span class="info-value">Student Seller</span></div>
+        <div class="info-row"><span class="info-label">Status</span><span class="info-value" style="color:#059669;font-weight:700;">&#10003; Active</span></div>
       </div>
-
-      <!-- Stats -->
       <div class="section-card">
         <div class="section-card-title">
           <div class="section-icon si-blue">&#128202;</div>
-          <div>
-            <h3>My Stats</h3>
-            <p>Your marketplace activity</p>
-          </div>
+          <div><h3>My Stats</h3><p>Marketplace activity at a glance</p></div>
         </div>
         <div class="stats-grid">
-          <div class="stat-tile">
-            <div class="st-num" id="stat-total">-</div>
-            <div class="st-label">Total Listed</div>
-          </div>
-          <div class="stat-tile">
-            <div class="st-num" id="stat-approved">-</div>
-            <div class="st-label">Approved</div>
-          </div>
-          <div class="stat-tile">
-            <div class="st-num" id="stat-pending">-</div>
-            <div class="st-label">Pending Review</div>
-          </div>
-          <div class="stat-tile">
-            <div class="st-num" id="stat-sold">-</div>
-            <div class="st-label">Sold</div>
-          </div>
+          <div class="stat-tile"><div class="st-num" id="stat-total">-</div><div class="st-label">Listed</div></div>
+          <div class="stat-tile"><div class="st-num" id="stat-approved">-</div><div class="st-label">Approved</div></div>
+          <div class="stat-tile"><div class="st-num" id="stat-sold">-</div><div class="st-label">Sold</div></div>
+          <div class="stat-tile"><div class="st-num" id="stat-purchases">-</div><div class="st-label">Purchased</div></div>
+          <div class="stat-tile"><div class="st-num" id="stat-active-req">-</div><div class="st-label">Active Orders</div></div>
+          <div class="stat-tile"><div class="st-num" id="stat-pending">-</div><div class="st-label">Pending Review</div></div>
         </div>
       </div>
-
     </div>
 
-    <!-- ══════════════════════════════════════════════ -->
-    <!-- TAB: ACTIVITY                                  -->
-    <!-- ══════════════════════════════════════════════ -->
-    <div class="tab-panel" id="panel-activity">
+    <!-- ══════════════════ TAB: MY LISTINGS ══════════════════ -->
+    <div class="tab-panel" id="panel-listings">
       <div class="section-card">
         <div class="section-card-title">
-          <div class="section-icon si-green">&#128203;</div>
-          <div>
-            <h3>My Listings</h3>
-            <p>All items you have submitted</p>
-          </div>
+          <div class="section-icon si-green">&#128230;</div>
+          <div><h3>My Listings</h3><p>All items you have submitted, grouped by availability</p></div>
         </div>
-        <div id="activity-listings">
-          <div style="text-align:center;padding:2rem;color:var(--text3);">Loading...</div>
-        </div>
+        <div id="listings-container"><div class="empty-msg">Loading...</div></div>
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════ -->
-    <!-- TAB: SETTINGS                                  -->
-    <!-- ══════════════════════════════════════════════ -->
-    <div class="tab-panel" id="panel-settings">
+    <!-- ══════════════════ TAB: MY PURCHASES ══════════════════ -->
+    <div class="tab-panel" id="panel-purchases">
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-blue">&#128722;</div>
+          <div><h3>My Purchases</h3><p>Items you have ordered from sellers</p></div>
+        </div>
+        <div id="purchases-container"><div class="empty-msg">Loading...</div></div>
+      </div>
+    </div>
 
-      <!-- Change Email -->
+    <!-- ══════════════════ TAB: MY SALES ══════════════════ -->
+    <div class="tab-panel" id="panel-sales">
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-pink">&#128200;</div>
+          <div><h3>My Sales</h3><p>Purchase requests sent to you — accept or reject them</p></div>
+        </div>
+        <div id="sales-container"><div class="empty-msg">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAB: HISTORY ══════════════════ -->
+    <div class="tab-panel" id="panel-history">
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-teal">&#128196;</div>
+          <div><h3>Purchase History</h3><p>Orders you placed that were accepted or completed</p></div>
+        </div>
+        <div id="purchase-history-container"><div class="empty-msg">Loading...</div></div>
+      </div>
+      <div class="section-card">
+        <div class="section-card-title">
+          <div class="section-icon si-purple">&#128176;</div>
+          <div><h3>Sales History</h3><p>Items you sold that were accepted or completed</p></div>
+        </div>
+        <div id="sales-history-container"><div class="empty-msg">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAB: SETTINGS ══════════════════ -->
+    <div class="tab-panel" id="panel-settings">
       <div class="section-card">
         <div class="section-card-title">
           <div class="section-icon si-purple">&#9993;</div>
-          <div>
-            <h3>Change Email</h3>
-            <p>Update your college email address</p>
-          </div>
+          <div><h3>Change Email</h3><p>Update your email address</p></div>
         </div>
-
         <div id="email-alert" class="alert"></div>
-
-        <div class="current-info">
-          Current: <strong id="current-email-display">-</strong>
-        </div>
-
+        <div class="current-info">Current: <strong id="current-email-display">-</strong></div>
         <form id="email-form" onsubmit="handleEmailChange(event)">
           <div class="form-group">
             <label>New Email Address</label>
-            <input type="email" id="new-email" placeholder="you@ritchennai.edu.in" required autocomplete="off" />
+            <input type="email" id="new-email" placeholder="you@email.com" required autocomplete="off" />
           </div>
           <div class="form-group">
             <label>Current Password</label>
@@ -533,24 +381,15 @@
               </button>
             </div>
           </div>
-          <button type="submit" class="btn btn-primary btn-full" id="email-btn" style="padding:0.72rem;">
-            Update Email
-          </button>
+          <button type="submit" class="btn btn-primary btn-full" id="email-btn" style="padding:0.72rem;">Update Email</button>
         </form>
       </div>
-
-      <!-- Change Password -->
       <div class="section-card">
         <div class="section-card-title">
           <div class="section-icon si-pink">&#128274;</div>
-          <div>
-            <h3>Change Password</h3>
-            <p>Keep your account secure with a strong password</p>
-          </div>
+          <div><h3>Change Password</h3><p>Keep your account secure</p></div>
         </div>
-
         <div id="password-alert" class="alert"></div>
-
         <form id="password-form" onsubmit="handlePasswordChange(event)">
           <div class="form-group">
             <label>Current Password</label>
@@ -561,9 +400,7 @@
               </button>
             </div>
           </div>
-
           <div class="form-divider"></div>
-
           <div class="form-group">
             <label>New Password</label>
             <div class="input-with-eye">
@@ -572,12 +409,9 @@
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
             </div>
-            <div class="password-strength" id="strength-wrap" style="display:none;">
-              <div class="strength-bar" id="strength-bar"></div>
-            </div>
+            <div class="password-strength" id="strength-wrap" style="display:none;"><div class="strength-bar" id="strength-bar"></div></div>
             <div class="strength-label" id="strength-label"></div>
           </div>
-
           <div class="form-group">
             <label>Confirm New Password</label>
             <div class="input-with-eye">
@@ -587,35 +421,12 @@
               </button>
             </div>
           </div>
-
-          <button type="submit" class="btn btn-primary btn-full" id="password-btn" style="padding:0.72rem;">
-            Update Password
-          </button>
+          <button type="submit" class="btn btn-primary btn-full" id="password-btn" style="padding:0.72rem;">Update Password</button>
         </form>
       </div>
-
-      <!-- Danger Zone -->
-      <div class="section-card danger-zone">
-        <div class="section-card-title">
-          <div class="section-icon" style="background:rgba(239,68,68,0.1);">&#9888;</div>
-          <div>
-            <h3 style="color:var(--red);">Danger Zone</h3>
-            <p>Irreversible account actions</p>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-          <div>
-            <div style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:0.2rem;">Sign out of all devices</div>
-            <div style="font-size:0.82rem;color:var(--text2);">Logs you out and clears your session</div>
-          </div>
-          <button class="btn btn-danger" onclick="logout()" style="white-space:nowrap;">
-            Logout Now
-          </button>
-        </div>
-      </div>
-
     </div>
-  </div>
+
+  </div><!-- /profile-page -->
 
   <script src="script.js"></script>
   <script>
@@ -623,80 +434,361 @@
     const user = getUser();
 
     // ── Init ──────────────────────────────────────────────────────
-    document.getElementById("nav-username").textContent         = user.name;
-    document.getElementById("avatar-initials").textContent      = user.name.charAt(0).toUpperCase();
+    document.getElementById("nav-username").textContent          = user.name;
+    document.getElementById("avatar-initials").textContent       = user.name.charAt(0).toUpperCase();
     document.getElementById("profile-avatar-circle").textContent = user.name.charAt(0).toUpperCase();
-    document.getElementById("profile-name").textContent         = user.name;
+    document.getElementById("profile-name").textContent          = user.name;
     document.getElementById("profile-email-display").textContent = user.email;
     document.getElementById("current-email-display").textContent = user.email;
-    document.getElementById("info-name").textContent            = user.name;
-    document.getElementById("info-email").textContent           = user.email;
+    document.getElementById("info-name").textContent             = user.name;
+    document.getElementById("info-email").textContent            = user.email;
 
-    // Member since chip
-    const joined = new Date().toLocaleDateString("en-IN", { month: "short", year: "numeric" });
-    document.getElementById("profile-member-chip").textContent  = "Joined " + joined;
+    const joined = new Date().toLocaleDateString("en-IN", { month:"short", year:"numeric" });
+    document.getElementById("profile-member-chip").textContent   = "Joined " + joined;
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function e(s) { const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+
+    function fmtDate(d) {
+      if (!d) return "—";
+      return new Date(d).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" });
+    }
+
+    function thumbHtml(img, fallback) {
+      fallback = fallback || "📦";
+      return img
+        ? "<img src='" + API + "/uploads/" + img + "' style='width:100%;height:100%;object-fit:cover;border-radius:10px;' onerror=\"this.parentElement.textContent='" + fallback + "'\" />"
+        : fallback;
+    }
+
+    function statusBadge(status, type) {
+      // type: 'purchase' | 'listing' | 'item'
+      if (type === "purchase") {
+        const map = {
+          pending:  ["sb-pending",  "⏳ Pending"],
+          accepted: ["sb-accepted", "✅ Accepted"],
+          rejected: ["sb-rejected", "❌ Rejected"],
+          reserved: ["sb-complete", "✔ Completed"]
+        };
+        const [cls, label] = map[status] || ["sb-pending", status];
+        return "<span class='sbadge " + cls + "'>" + label + "</span>";
+      }
+      if (type === "listing") {
+        const map = {
+          Pending:          ["sb-mod-pending",    "⏳ Pending"],
+          Approved:         ["sb-mod-approved",   "✅ Approved"],
+          Rejected:         ["sb-mod-rejected",   "❌ Rejected"],
+          "Needs Correction":["sb-mod-correction","🔧 Needs Fix"]
+        };
+        const [cls, label] = map[status] || ["sb-mod-pending", status];
+        return "<span class='sbadge " + cls + "'>" + label + "</span>";
+      }
+      if (type === "item") {
+        const map = {
+          Available: ["sb-available", "🟢 Available"],
+          Reserved:  ["sb-reserved",  "🟡 Reserved"],
+          Sold:      ["sb-sold",      "⚫ Sold"]
+        };
+        const [cls, label] = map[status] || ["sb-available", status];
+        return "<span class='sbadge " + cls + "'>" + label + "</span>";
+      }
+      return "<span class='sbadge sb-pending'>" + status + "</span>";
+    }
 
     // ── Tab switching ─────────────────────────────────────────────
+    const _loaded = {};
     function switchTab(name) {
       document.querySelectorAll(".profile-tab").forEach(t => t.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-      document.getElementById("tab-" + name).classList.add("active");
+      document.getElementById("tab-"   + name).classList.add("active");
       document.getElementById("panel-" + name).classList.add("active");
-      if (name === "activity") loadActivityListings();
-      if (name === "profile")  loadStats();
+      if (!_loaded[name]) { _loaded[name] = true; _tabLoaders[name] && _tabLoaders[name](); }
     }
 
-    // ── Load stats ────────────────────────────────────────────────
-    async function loadStats() {
+    const _tabLoaders = {
+      profile:   loadProfile,
+      listings:  loadListings,
+      purchases: loadPurchases,
+      sales:     loadSales,
+      history:   loadHistory,
+      settings:  () => {}
+    };
+
+    // ── PROFILE TAB ───────────────────────────────────────────────
+    async function loadProfile() {
       try {
-        const url = API + "/my-items?user_id=" + user.id + "&t=" + Date.now();
-        const res  = await fetch(url, { headers: userAuthHeaders() });
-        const data = await res.json();
-        if (!data.success) return;
-        const items = data.items;
-        document.getElementById("stat-total").textContent    = items.length;
-        document.getElementById("stat-approved").textContent = items.filter(i => i.status === "Approved").length;
-        document.getElementById("stat-pending").textContent  = items.filter(i => i.status === "Pending" || i.status === "Needs Correction").length;
-        document.getElementById("stat-sold").textContent     = items.filter(i => i.sold).length;
-      } catch(e) {}
+        const [itemsRes, purchasesRes, salesRes] = await Promise.all([
+          fetch(API + "/my-items?user_id=" + user.id + "&t=" + Date.now(), { headers: userAuthHeaders() }),
+          fetch(API + "/api/purchases/buyer?buyerEmail=" + encodeURIComponent(user.email)),
+          fetch(API + "/api/purchases/seller?sellerEmail=" + encodeURIComponent(user.email))
+        ]);
+        const [itemsData, purchasesData, salesData] = await Promise.all([
+          itemsRes.json(), purchasesRes.json(), salesRes.json()
+        ]);
+
+        const items     = itemsData.success     ? itemsData.items     : [];
+        const purchases = purchasesData.success  ? purchasesData.purchases : [];
+        const sales     = salesData.success      ? salesData.purchases    : [];
+
+        document.getElementById("stat-total").textContent      = items.length;
+        document.getElementById("stat-approved").textContent   = items.filter(i => i.status === "Approved").length;
+        document.getElementById("stat-sold").textContent       = items.filter(i => i.item_status === "Sold" || i.sold).length;
+        document.getElementById("stat-purchases").textContent  = purchases.filter(p => p.purchaseStatus === "accepted" || p.purchaseStatus === "reserved").length;
+        document.getElementById("stat-active-req").textContent = purchases.filter(p => p.purchaseStatus === "pending").length + sales.filter(p => p.purchaseStatus === "pending").length;
+        document.getElementById("stat-pending").textContent    = items.filter(i => i.status === "Pending" || i.status === "Needs Correction").length;
+      } catch(err) {}
     }
 
-    // ── Load activity listings ────────────────────────────────────
-    async function loadActivityListings() {
-      const container = document.getElementById("activity-listings");
-      container.innerHTML = "<div style=\"text-align:center;padding:2rem;color:var(--text3);\">Loading...</div>";
+    // ── LISTINGS TAB ──────────────────────────────────────────────
+    async function loadListings() {
+      const container = document.getElementById("listings-container");
+      container.innerHTML = "<div class='empty-msg'>Loading...</div>";
       try {
-        const url = API + "/my-items?user_id=" + user.id + "&t=" + Date.now();
-        const res  = await fetch(url, { headers: userAuthHeaders() });
+        const res  = await fetch(API + "/my-items?user_id=" + user.id + "&t=" + Date.now(), { headers: userAuthHeaders() });
         const data = await res.json();
         if (!data.success || !data.items.length) {
-          container.innerHTML = "<div style=\"text-align:center;padding:2rem;color:var(--text3);\">No listings yet. <a href=\"sell.html\" style=\"color:var(--p1);font-weight:700;\">List your first item</a></div>";
+          container.innerHTML = "<div class='empty-msg'>No listings yet. <a href='sell.html'>List your first item →</a></div>";
           return;
         }
-        const statusClass = { Pending:"s-pending", Approved:"s-approved", Rejected:"s-rejected", "Needs Correction":"s-correction" };
-        container.innerHTML = data.items.map(item => {
-          const status = item.status || "Pending";
-          const sc = statusClass[status] || "s-pending";
-          const price = item.deal_type === "exchange" ? "Exchange" : "Rs." + Number(item.price).toLocaleString();
-          return "<div style=\"display:flex;align-items:center;gap:0.85rem;padding:0.75rem 0;border-bottom:1px solid var(--border);\">"
-            + "<div style=\"width:44px;height:44px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;overflow:hidden;\">"
-            + (item.image ? "<img src=\"" + API + "/uploads/" + item.image + "\" style=\"width:100%;height:100%;object-fit:cover;border-radius:8px;\" onerror=\"this.style.display='none'\" />" : "&#128230;")
-            + "</div>"
-            + "<div style=\"flex:1;min-width:0;\">"
-            + "<div style=\"font-weight:700;font-size:0.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">" + e(item.name) + "</div>"
-            + "<div style=\"font-size:0.78rem;color:var(--text2);margin-top:0.1rem;\">" + e(item.category) + " &middot; " + price + "</div>"
-            + "</div>"
-            + "<span class=\"status-badge " + sc + "\" style=\"display:inline-flex;align-items:center;padding:0.2rem 0.65rem;border-radius:20px;font-size:0.7rem;font-weight:800;text-transform:uppercase;white-space:nowrap;\">" + status + "</span>"
-            + "</div>";
-        }).join("") + "<style>.s-pending{background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.35)}.s-approved{background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.35)}.s-rejected{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.35)}.s-correction{background:rgba(59,130,246,0.12);color:#2563eb;border:1px solid rgba(59,130,246,0.35)}</style>";
-      } catch(e) {
-        container.innerHTML = "<div style=\"text-align:center;padding:2rem;color:var(--red);\">Could not load listings.</div>";
+
+        const groups = { Available: [], Reserved: [], Sold: [], Pending: [], Rejected: [], "Needs Correction": [] };
+        data.items.forEach(item => {
+          const is = item.item_status || (item.sold ? "Sold" : "Available");
+          if (item.status !== "Approved") {
+            (groups[item.status] || (groups[item.status] = [])).push(item);
+          } else {
+            (groups[is] || (groups[is] = [])).push(item);
+          }
+        });
+
+        const groupOrder = [["Available","🟢 Available"],["Reserved","🟡 Reserved"],["Sold","⚫ Sold"],["Pending","⏳ Pending Review"],["Needs Correction","🔧 Needs Correction"],["Rejected","❌ Rejected"]];
+        let html = "";
+        groupOrder.forEach(([gKey, gLabel]) => {
+          const items = groups[gKey];
+          if (!items || !items.length) return;
+          html += "<div class='group-header'>" + gLabel + " <span style='color:var(--text3);font-size:0.72rem;font-weight:600;'>(" + items.length + ")</span></div>";
+          html += items.map(item => {
+            const price = item.deal_type === "exchange" ? "Exchange" : "₹" + Number(item.price).toLocaleString();
+            const modBadge = statusBadge(item.status, "listing");
+            const itemBadge = item.status === "Approved" ? statusBadge(item.item_status || "Available", "item") : "";
+            const resubmit = (item.status === "Rejected" || item.status === "Needs Correction")
+              ? "<a href='sell.html?resubmit=" + item._id + "' style='font-size:0.75rem;padding:0.3rem 0.75rem;background:var(--p1);color:#fff;border-radius:7px;font-weight:700;text-decoration:none;'>Edit &amp; Resubmit</a>"
+              : "";
+            const feedback = (item.rejection_reason)
+              ? "<div style='font-size:0.75rem;color:#b91c1c;margin-top:0.2rem;'>Reason: " + e(item.rejection_reason) + "</div>"
+              : "";
+            return "<div class='activity-row'>"
+              + "<div class='ar-thumb'>" + thumbHtml(item.image) + "</div>"
+              + "<div class='ar-info'>"
+              + "<div class='ar-name'>" + e(item.name) + "</div>"
+              + "<div class='ar-sub'>" + e(item.category) + " · " + price + " · " + e(item.condition) + "</div>"
+              + feedback
+              + "</div>"
+              + "<div class='ar-right'>"
+              + modBadge + (itemBadge ? "<br style='margin:2px'>" + itemBadge : "")
+              + (resubmit ? "<div style='margin-top:0.35rem;'>" + resubmit + "</div>" : "")
+              + "<div class='ar-date'>" + fmtDate(item.createdAt) + "</div>"
+              + "</div></div>";
+          }).join("");
+        });
+        container.innerHTML = html || "<div class='empty-msg'>No listings yet.</div>";
+      } catch(err) {
+        container.innerHTML = "<div class='empty-msg' style='color:var(--red);'>Could not load listings.</div>";
       }
     }
 
-    function e(str) { const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML; }
+    // ── PURCHASES TAB ─────────────────────────────────────────────
+    async function loadPurchases() {
+      const container = document.getElementById("purchases-container");
+      container.innerHTML = "<div class='empty-msg'>Loading...</div>";
+      try {
+        const res  = await fetch(API + "/api/purchases/buyer?buyerEmail=" + encodeURIComponent(user.email));
+        const data = await res.json();
+        if (!data.success || !data.purchases.length) {
+          container.innerHTML = "<div class='empty-msg'>You haven't placed any orders yet. <a href='buy.html'>Browse items →</a></div>";
+          return;
+        }
+        container.innerHTML = data.purchases.map(p => {
+          const canCancel = p.purchaseStatus === "pending";
+          return "<div class='activity-row' id='purchase-row-" + p._id + "'>"
+            + "<div class='ar-thumb'>" + (p.itemImage ? thumbHtml(p.itemImage) : "📦") + "</div>"
+            + "<div class='ar-info'>"
+            + "<div class='ar-name'>" + e(p.itemName || "Item") + "</div>"
+            + "<div class='ar-sub'>Seller: " + e(p.sellerEmail) + "</div>"
+            + (p.note ? "<div class='ar-note'>&ldquo;" + e(p.note) + "&rdquo;</div>" : "")
+            + (p.sellerNote ? "<div style='font-size:0.75rem;color:#059669;margin-top:0.1rem;'>Seller note: " + e(p.sellerNote) + "</div>" : "")
+            + "</div>"
+            + "<div class='ar-right'>"
+            + statusBadge(p.purchaseStatus, "purchase")
+            + (canCancel ? "<button class='btn-cancel-sm' onclick='cancelPurchase(\"" + p._id + "\",this)'>Cancel</button>" : "")
+            + "<div class='ar-date'>" + fmtDate(p.createdAt) + "</div>"
+            + "</div></div>";
+        }).join("");
+      } catch(err) {
+        container.innerHTML = "<div class='empty-msg' style='color:var(--red);'>Could not load purchases.</div>";
+      }
+    }
 
-    // ── Toggle password visibility ────────────────────────────────
+    async function cancelPurchase(purchaseId, btn) {
+      if (!confirm("Cancel this order?")) return;
+      btn.disabled = true; btn.textContent = "Cancelling...";
+      try {
+        const res  = await fetch(API + "/api/purchases/" + purchaseId + "/cancel", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ buyerEmail: user.email })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const row = document.getElementById("purchase-row-" + purchaseId);
+          if (row) row.style.opacity = "0.4";
+          btn.textContent = "Cancelled";
+          // Reload after short delay
+          setTimeout(() => { _loaded.purchases = false; loadPurchases(); }, 800);
+        } else {
+          alert(data.error || "Could not cancel.");
+          btn.disabled = false; btn.textContent = "Cancel";
+        }
+      } catch(e) { alert("Network error."); btn.disabled = false; btn.textContent = "Cancel"; }
+    }
+
+    // ── SALES TAB ─────────────────────────────────────────────────
+    async function loadSales() {
+      const container = document.getElementById("sales-container");
+      container.innerHTML = "<div class='empty-msg'>Loading...</div>";
+      try {
+        const res  = await fetch(API + "/api/purchases/seller?sellerEmail=" + encodeURIComponent(user.email));
+        const data = await res.json();
+        if (!data.success || !data.purchases.length) {
+          container.innerHTML = "<div class='empty-msg'>No purchase requests received yet. List items to start selling.</div>";
+          return;
+        }
+        // Group: pending first, then accepted, then rejected
+        const sorted = [...data.purchases].sort((a,b) => {
+          const order = { pending:0, accepted:1, reserved:2, rejected:3 };
+          return (order[a.purchaseStatus]||9) - (order[b.purchaseStatus]||9);
+        });
+        container.innerHTML = sorted.map(p => {
+          const isPending = p.purchaseStatus === "pending";
+          const actBtns = isPending
+            ? "<div style='display:flex;gap:0.4rem;margin-top:0.35rem;'>"
+              + "<button class='btn-accept-sm' onclick='respondToSale(\"" + p._id + "\",\"accept\",this)'>✅ Accept</button>"
+              + "<button class='btn-reject-sm' onclick='respondToSale(\"" + p._id + "\",\"reject\",this)'>✕ Reject</button>"
+              + "</div>"
+            : "";
+          return "<div class='activity-row' id='sale-row-" + p._id + "'>"
+            + "<div class='ar-thumb'>" + "📦" + "</div>"
+            + "<div class='ar-info'>"
+            + "<div class='ar-name'>" + e(p.itemName || "Item") + "</div>"
+            + "<div class='ar-sub'>Buyer: <strong>" + e(p.buyerName) + "</strong> · " + e(p.buyerEmail) + "</div>"
+            + (p.note ? "<div class='ar-note'>&ldquo;" + e(p.note) + "&rdquo;</div>" : "")
+            + actBtns
+            + "</div>"
+            + "<div class='ar-right'>"
+            + statusBadge(p.purchaseStatus, "purchase")
+            + "<div class='ar-date'>" + fmtDate(p.createdAt) + "</div>"
+            + "</div></div>";
+        }).join("");
+      } catch(err) {
+        container.innerHTML = "<div class='empty-msg' style='color:var(--red);'>Could not load sales.</div>";
+      }
+    }
+
+    async function respondToSale(purchaseId, action, btn) {
+      btn.disabled = true;
+      btn.textContent = action === "accept" ? "Accepting..." : "Rejecting...";
+      try {
+        const res  = await fetch(API + "/api/purchases/" + purchaseId + "/respond", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sellerEmail: user.email, action })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const row = document.getElementById("sale-row-" + purchaseId);
+          if (row) {
+            row.querySelector(".ar-right").innerHTML =
+              statusBadge(action === "accept" ? "accepted" : "rejected", "purchase")
+              + "<div class='ar-date'>" + fmtDate(new Date()) + "</div>";
+            const btns = row.querySelector("[style*='display:flex']");
+            if (btns) btns.remove();
+          }
+          // Refresh stats
+          _loaded.profile = false; loadProfile();
+          _loaded.requests = false;
+        } else {
+          alert(data.error || "Failed.");
+          btn.disabled = false;
+          btn.textContent = action === "accept" ? "✅ Accept" : "✕ Reject";
+        }
+      } catch(err) {
+        alert("Network error.");
+        btn.disabled = false;
+        btn.textContent = action === "accept" ? "✅ Accept" : "✕ Reject";
+      }
+    }
+
+    // ── HISTORY TAB ───────────────────────────────────────────────
+    async function loadHistory() {
+      const phc = document.getElementById("purchase-history-container");
+      const shc = document.getElementById("sales-history-container");
+      phc.innerHTML = "<div class='empty-msg'>Loading...</div>";
+      shc.innerHTML = "<div class='empty-msg'>Loading...</div>";
+
+      try {
+        const [buyRes, sellRes] = await Promise.all([
+          fetch(API + "/api/purchases/buyer?buyerEmail="   + encodeURIComponent(user.email)),
+          fetch(API + "/api/purchases/seller?sellerEmail=" + encodeURIComponent(user.email))
+        ]);
+        const [buyData, sellData] = await Promise.all([buyRes.json(), sellRes.json()]);
+
+        // Purchase history: accepted or reserved (completed)
+        const pastPurchases = (buyData.success ? buyData.purchases : [])
+          .filter(p => p.purchaseStatus === "accepted" || p.purchaseStatus === "reserved");
+        if (!pastPurchases.length) {
+          phc.innerHTML = "<div class='empty-msg'>No completed purchases yet.</div>";
+        } else {
+          phc.innerHTML = pastPurchases.map(p =>
+            "<div class='activity-row'>"
+            + "<div class='ar-thumb'>🛒</div>"
+            + "<div class='ar-info'>"
+            + "<div class='ar-name'>" + e(p.itemName || "Item") + "</div>"
+            + "<div class='ar-sub'>Seller: " + e(p.sellerEmail) + "</div>"
+            + (p.sellerNote ? "<div style='font-size:0.75rem;color:#059669;margin-top:0.1rem;'>Note: " + e(p.sellerNote) + "</div>" : "")
+            + "</div>"
+            + "<div class='ar-right'>"
+            + statusBadge(p.purchaseStatus, "purchase")
+            + "<div class='ar-date'>" + fmtDate(p.updatedAt || p.createdAt) + "</div>"
+            + "</div></div>"
+          ).join("");
+        }
+
+        // Sales history: accepted or reserved
+        const pastSales = (sellData.success ? sellData.purchases : [])
+          .filter(p => p.purchaseStatus === "accepted" || p.purchaseStatus === "reserved");
+        if (!pastSales.length) {
+          shc.innerHTML = "<div class='empty-msg'>No completed sales yet.</div>";
+        } else {
+          shc.innerHTML = pastSales.map(p =>
+            "<div class='activity-row'>"
+            + "<div class='ar-thumb'>📦</div>"
+            + "<div class='ar-info'>"
+            + "<div class='ar-name'>" + e(p.itemName || "Item") + "</div>"
+            + "<div class='ar-sub'>Buyer: <strong>" + e(p.buyerName) + "</strong> · " + e(p.buyerEmail) + "</div>"
+            + "</div>"
+            + "<div class='ar-right'>"
+            + statusBadge(p.purchaseStatus, "purchase")
+            + "<div class='ar-date'>" + fmtDate(p.updatedAt || p.createdAt) + "</div>"
+            + "</div></div>"
+          ).join("");
+        }
+      } catch(err) {
+        phc.innerHTML = "<div class='empty-msg' style='color:var(--red);'>Could not load history.</div>";
+        shc.innerHTML = "";
+      }
+    }
+
+    // ── Settings: toggle eye ──────────────────────────────────────
     function toggleEye(inputId, btn) {
       const input = document.getElementById(inputId);
       const isText = input.type === "text";
@@ -704,7 +796,7 @@
       btn.style.color = isText ? "" : "var(--p1)";
     }
 
-    // ── Password strength ─────────────────────────────────────────
+    // ── Settings: password strength ───────────────────────────────
     function checkStrength(val) {
       const wrap  = document.getElementById("strength-wrap");
       const bar   = document.getElementById("strength-bar");
@@ -718,17 +810,15 @@
       if (/[0-9]/.test(val)) score++;
       if (/[^A-Za-z0-9]/.test(val)) score++;
       const levels = [
-        { pct:"20%", color:"#ef4444", text:"Very weak" },
-        { pct:"40%", color:"#f97316", text:"Weak" },
-        { pct:"60%", color:"#f59e0b", text:"Fair" },
-        { pct:"80%", color:"#10b981", text:"Strong" },
-        { pct:"100%", color:"#059669", text:"Very strong" }
+        { pct:"20%", color:"#ef4444", text:"Very weak"  },
+        { pct:"40%", color:"#f97316", text:"Weak"        },
+        { pct:"60%", color:"#f59e0b", text:"Fair"        },
+        { pct:"80%", color:"#10b981", text:"Strong"      },
+        { pct:"100%",color:"#059669", text:"Very strong" }
       ];
       const lvl = levels[Math.min(score - 1, 4)] || levels[0];
-      bar.style.width = lvl.pct;
-      bar.style.background = lvl.color;
-      label.textContent = lvl.text;
-      label.style.color = lvl.color;
+      bar.style.width = lvl.pct; bar.style.background = lvl.color;
+      label.textContent = lvl.text; label.style.color = lvl.color;
     }
 
     // ── Alert helper ──────────────────────────────────────────────
@@ -746,10 +836,8 @@
       const newEmail = document.getElementById("new-email").value.trim().toLowerCase();
       const password = document.getElementById("email-current-password").value;
       if (newEmail === user.email) { setAlert("email-alert", "New email is the same as current.", "error"); return; }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newEmail)) { setAlert("email-alert", "Please enter a valid email address.", "error"); return; }
-      btn.disabled = true;
-      btn.innerHTML = "<span class=\"spinner\"></span> Updating...";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) { setAlert("email-alert", "Please enter a valid email.", "error"); return; }
+      btn.disabled = true; btn.innerHTML = "<span class='spinner'></span> Updating...";
       try {
         const res  = await fetch(API + "/settings/change-email", {
           method: "PUT",
@@ -779,11 +867,10 @@
       const currentPwd = document.getElementById("current-password").value;
       const newPwd     = document.getElementById("new-password").value;
       const confirmPwd = document.getElementById("confirm-password").value;
-      if (newPwd.length < 6) { setAlert("password-alert", "New password must be at least 6 characters.", "error"); return; }
+      if (newPwd.length < 6) { setAlert("password-alert", "Password must be at least 6 characters.", "error"); return; }
       if (newPwd !== confirmPwd) { setAlert("password-alert", "Passwords do not match.", "error"); return; }
       if (currentPwd === newPwd) { setAlert("password-alert", "New password must differ from current.", "error"); return; }
-      btn.disabled = true;
-      btn.innerHTML = "<span class=\"spinner\"></span> Updating...";
+      btn.disabled = true; btn.innerHTML = "<span class='spinner'></span> Updating...";
       try {
         const res  = await fetch(API + "/settings/change-password", {
           method: "PUT",
@@ -804,8 +891,10 @@
       finally { btn.disabled = false; btn.textContent = "Update Password"; }
     }
 
-    // Load stats on init
-    loadStats();
+    // ── Boot ─────────────────────────────────────────────────────
+    _loaded.profile = true;
+    loadProfile();
+
   </script>
 </body>
 </html>

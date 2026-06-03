@@ -76,7 +76,7 @@ const itemSchema = new mongoose.Schema({
   user_id:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   sellerEmail:      { type: String, default: '' },
   // Item availability status for chat system
-  item_status:      { type: String, enum: ['Available', 'Reserved', 'Sold'], default: 'Available' },
+  item_status:      { type: String, enum: ['Available', 'Pending Approval', 'Reserved', 'Completed'], default: 'Available' },
   reserved_for:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   // Moderation
   status:           { type: String, enum: ['Pending','Approved','Rejected','Needs Correction'], default: 'Pending' },
@@ -299,15 +299,24 @@ app.post('/addItem', upload.array('images', 7), async (req, res) => {
 });
 
 // GET /items � supports: search, category, minPrice, maxPrice, department, deal_type
-// GET /items/:id -- single item fetch
+// GET /items/:id -- single item fetch (public — blocks sold/reserved items)
 app.get('/items/:id', async (req, res) => {
   try {
-    var id = req.params.id;
-    if (!require('mongoose').Types.ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid item ID.' });
-    var item = await Item.findById(id).lean();
-    if (!item) return res.status(404).json({ error: 'Item not found.' });
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ error: 'Invalid item ID.' });
+
+    const item = await Item.findById(id).lean();
+    if (!item)
+      return res.status(404).json({ error: 'Item not found.' });
+
+    // Block public access to sold or reserved items unconditionally
+    if (item.item_status === 'Sold' || item.item_status === 'Reserved' || item.sold) {
+      return res.status(410).json({ error: 'This item is no longer available.', gone: true });
+    }
+
     res.json({ success: true, item });
-  } catch(err) {
+  } catch (err) {
     console.error('Get item error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
@@ -316,28 +325,25 @@ app.get('/items/:id', async (req, res) => {
 app.get('/items', async (req, res) => {
   try {
     const { category, search, minPrice, maxPrice, department, deal_type } = req.query;
-    const userEmail = req.query.userEmail; // Get user email to show reserved items
-    
-    // Only show approved items that are Available OR reserved for this user
-    const filter = { 
+
+    // Only show Approved + Available + not sold items
+    // sold: false catches legacy items that were marked sold before item_status field existed
+    const filter = {
       status: 'Approved',
-      $or: [
-        { item_status: 'Available' },
-        { item_status: 'Reserved', reserved_for: null }, // Fallback for old data
-        ...(userEmail ? [{ item_status: 'Reserved', sellerEmail: userEmail.toLowerCase() }] : [])
-      ]
+      item_status: 'Available',
+      sold: false
     };
 
     if (category && category !== 'all') filter.category = category;
     if (deal_type && deal_type !== 'all') filter.deal_type = deal_type;
 
     if (search) {
-      const regex = new RegExp(search, 'i');
+      const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.$or = [{ name: regex }, { description: regex }, { subject: regex }];
     }
 
     if (department) {
-      const deptRegex = new RegExp(department, 'i');
+      const deptRegex = new RegExp(department.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.subject = deptRegex;
     }
 
@@ -356,6 +362,7 @@ app.get('/items', async (req, res) => {
 });
 
 // PUT /items/:id/sold — seller marks their own item as sold
+// Deletes all messages for this item and notifies both parties via socket
 app.put('/items/:id/sold', async (req, res) => {
   try {
     const { id } = req.params;
@@ -379,7 +386,27 @@ app.put('/items/:id/sold', async (req, res) => {
     item.item_status = 'Sold';
     await item.save();
 
-    res.json({ success: true, message: 'Item marked as sold.' });
+    // Emit conversation_completed so both buyer and seller chat disappears in real time
+    try {
+      const itemIdStr    = id.toString();
+      const sellerEmail  = (item.sellerEmail || '').toLowerCase();
+      const allEmails    = await Message.find({ itemId: id }).distinct('senderEmail');
+      const participants = [...new Set([...allEmails, sellerEmail])];
+      for (let i = 0; i < participants.length; i++) {
+        for (let j = i + 1; j < participants.length; j++) {
+          const room = getRoomId(itemIdStr, participants[i], participants[j]);
+          global.io && global.io.to(room).emit('conversation_completed', { itemId: itemIdStr });
+        }
+      }
+    } catch (emitErr) {
+      console.error('[sold] socket emit error:', emitErr.message);
+    }
+
+    // Delete all messages for this item — no listing = no chat
+    await Message.deleteMany({ itemId: id });
+    console.log('[sold] messages deleted for item:', id);
+
+    res.json({ success: true, message: 'Item marked as sold. Conversation removed.' });
   } catch (err) {
     console.error('Mark sold error:', err);
     res.status(500).json({ error: 'Server error.' });
@@ -680,7 +707,9 @@ app.get('/chat/messages', async (req, res) => {
   }
 });
 
-// GET /chat/threads?myEmail= — list all unique conversations for a user
+// GET /chat/threads?myEmail= — list active conversations for a user.
+// Conversations where the item is Completed are hidden from buyers and sellers.
+// Only admins can see completed conversations (via /admin/completed-conversations).
 app.get('/chat/threads', async (req, res) => {
   try {
     const { myEmail } = req.query;
@@ -710,23 +739,25 @@ app.get('/chat/threads', async (req, res) => {
       }
     }
 
-    // Enrich with item name, other user's name, and buy/sell role
+    // Enrich with item name, other user's name, buy/sell role, and item_status
     const threads = [];
     for (const t of seen.values()) {
       const [item, otherUser] = await Promise.all([
-        Item.findById(t.itemId).select('name image sellerEmail').lean(),
+        Item.findById(t.itemId).select('name image sellerEmail item_status').lean(),
         User.findOne({ email: t.otherEmail }).select('name').lean()
       ]);
+
+      // Hide sold/completed conversations from buyer and seller — no listing = no chat
+      const itemStatus = item ? (item.item_status || 'Available') : 'Available';
+      if (itemStatus === 'Completed' || itemStatus === 'Sold') continue;
 
       const itemName  = item ? item.name : 'Deleted item';
       const otherName = otherUser ? otherUser.name : t.otherEmail;
 
-      // iAmSeller: I listed this item
-      // role shown to ME: 'Buying' = other person is buying from me; 'Selling' = I am buying from them
       const iAmSeller = item && item.sellerEmail && item.sellerEmail.toLowerCase() === me;
       const role      = iAmSeller ? 'Buying' : 'Selling';
 
-      threads.push({ ...t, itemId: t.itemId.toString(), itemName, otherName, role });
+      threads.push({ ...t, itemId: t.itemId.toString(), itemName, otherName, role, itemStatus });
     }
 
     res.json({ success: true, threads });
@@ -817,13 +848,15 @@ app.get('/admin/admins', adminAuth, async (req, res) => {
 // GET /admin/stats — dashboard numbers
 app.get('/admin/stats', adminAuth, async (req, res) => {
   try {
-    const [totalUsers, totalItems, soldItems, totalMessages] = await Promise.all([
+    const [totalUsers, totalItems, soldItems, totalMessages, pendingOrders, totalOrders] = await Promise.all([
       User.countDocuments(),
       Item.countDocuments(),
-      Item.countDocuments({ sold: true }),
-      Message.countDocuments()
+      Item.countDocuments({ item_status: 'Sold' }),
+      Message.countDocuments(),
+      Purchase.countDocuments({ purchaseStatus: 'pending' }),
+      Purchase.countDocuments()
     ]);
-    res.json({ success: true, totalUsers, totalItems, soldItems, totalMessages });
+    res.json({ success: true, totalUsers, totalItems, soldItems, totalMessages, pendingOrders, totalOrders });
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
   }
@@ -992,11 +1025,14 @@ app.get('/api/messages/:itemId', async (req, res) => {
     }).sort({ createdAt: 1 });
 
     console.log('[GET /api/messages] returning', messages.length, 'messages');
+    const st          = item.item_status || 'Available';
+    const chatCompleted = (st === 'Sold' || st === 'Completed');
     res.json({ 
       success: true, 
       messages,
-      itemStatus: item.item_status || 'Available',
-      itemName: item.name
+      itemStatus:    st,
+      chatCompleted: chatCompleted,
+      itemName:      item.name
     });
   } catch (err) {
     console.error('[GET /api/messages] error:', err);
@@ -1076,6 +1112,95 @@ app.post('/api/chat/upload-image', upload.single('image'), async (req, res) => {
   } catch (err) {
     console.error('[/api/chat/upload-image]', err);
     res.status(500).json({ error: 'Server error during image upload.' });
+  }
+});
+
+// GET /admin/orders — all purchase orders (admin view)
+app.get('/admin/orders', adminAuth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    const filter = status && status !== 'all' ? { purchaseStatus: status } : {};
+    const orders = await Purchase.find(filter)
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ success: true, orders });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// PUT /admin/orders/:id/cancel — admin force-cancels an order
+app.put('/admin/orders/:id/cancel', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid ID.' });
+    const purchase = await Purchase.findByIdAndUpdate(id, { purchaseStatus: 'rejected', sellerNote: 'Cancelled by admin.' }, { new: true });
+    if (!purchase) return res.status(404).json({ error: 'Order not found.' });
+    // Restore item to Available if it was Reserved for this purchase
+    await Item.findByIdAndUpdate(purchase.itemId, { item_status: 'Available', reserved_for: null });
+    res.json({ success: true, message: 'Order cancelled.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// ===== NOTIFICATION ROUTE =====
+
+// GET /api/notifications?email= — unread counts for bell icon
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const { email, lastSeen } = req.query;
+    if (!email) return res.status(400).json({ error: 'email is required.' });
+
+    const userEmail = email.toLowerCase();
+    const since     = lastSeen ? new Date(Number(lastSeen)) : new Date(0);
+
+    const [
+      newRequestsForSeller,
+      acceptedForBuyer,
+      rejectedForBuyer,
+      newMessages
+    ] = await Promise.all([
+      // New purchase requests sent TO this user as seller (pending, created after lastSeen)
+      Purchase.countDocuments({
+        sellerEmail:     userEmail,
+        purchaseStatus:  'pending',
+        createdAt:       { $gt: since }
+      }),
+      // Requests accepted for this user as buyer (after lastSeen)
+      Purchase.countDocuments({
+        buyerEmail:      userEmail,
+        purchaseStatus:  'accepted',
+        updatedAt:       { $gt: since }
+      }),
+      // Requests rejected for this user as buyer (after lastSeen)
+      Purchase.countDocuments({
+        buyerEmail:      userEmail,
+        purchaseStatus:  'rejected',
+        updatedAt:       { $gt: since }
+      }),
+      // New chat messages received by this user (after lastSeen)
+      Message.countDocuments({
+        receiverEmail: userEmail,
+        createdAt:     { $gt: since }
+      })
+    ]);
+
+    const total = newRequestsForSeller + acceptedForBuyer + rejectedForBuyer + newMessages;
+
+    res.json({
+      success: true,
+      total,
+      breakdown: {
+        newRequests: newRequestsForSeller,
+        accepted:    acceptedForBuyer,
+        rejected:    rejectedForBuyer,
+        messages:    newMessages
+      }
+    });
+  } catch (err) {
+    console.error('Notifications error:', err);
+    res.status(500).json({ error: 'Server error.' });
   }
 });
 
@@ -1212,6 +1337,29 @@ app.get('/api/purchases/item/:itemId', async (req, res) => {
   }
 });
 
+// PUT /api/purchases/:id/cancel — buyer cancels a pending request
+app.put('/api/purchases/:id/cancel', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { buyerEmail } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ error: 'Invalid purchase ID.' });
+    const purchase = await Purchase.findById(id);
+    if (!purchase) return res.status(404).json({ error: 'Purchase not found.' });
+    if (purchase.buyerEmail !== (buyerEmail || '').toLowerCase())
+      return res.status(403).json({ error: 'Not authorised.' });
+    if (purchase.purchaseStatus !== 'pending')
+      return res.status(400).json({ error: 'Only pending orders can be cancelled.' });
+    purchase.purchaseStatus = 'rejected';
+    purchase.sellerNote = 'Cancelled by buyer.';
+    await purchase.save();
+    res.json({ success: true, message: 'Order cancelled.' });
+  } catch (err) {
+    console.error('[PUT /api/purchases/:id/cancel]', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
 // PUT /api/purchases/:id/respond — seller accepts or declines
 app.put('/api/purchases/:id/respond', async (req, res) => {
   try {
@@ -1263,6 +1411,66 @@ app.put('/api/purchases/:id/respond', async (req, res) => {
   }
 });
 
+// PUT /api/purchases/:id/complete — seller marks the handoff as complete
+// Sets item_status = 'Completed', closes the conversation for buyer and seller
+app.put('/api/purchases/:id/complete', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sellerEmail } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ error: 'Invalid purchase ID.' });
+
+    const purchase = await Purchase.findById(id);
+    if (!purchase) return res.status(404).json({ error: 'Purchase not found.' });
+    if (purchase.sellerEmail !== (sellerEmail || '').toLowerCase())
+      return res.status(403).json({ error: 'Only the seller can mark this as complete.' });
+    if (purchase.purchaseStatus !== 'accepted')
+      return res.status(400).json({ error: 'Only accepted orders can be completed.' });
+
+    // Mark purchase as completed
+    purchase.purchaseStatus = 'completed';
+    await purchase.save();
+
+    // Mark item as Completed — matches schema enum, hides from all public listings
+    await Item.findByIdAndUpdate(purchase.itemId, {
+      item_status: 'Completed',
+      sold:        true
+    });
+
+    // Emit conversation_completed to both participants so their chat disappears in real time
+    try {
+      const buyerEmail  = purchase.buyerEmail;
+      const sellerEmail = purchase.sellerEmail;
+      const itemId      = purchase.itemId.toString();
+
+      // Collect all unique participants who have messaged about this item
+      const allEmails = await Message.find({ itemId: purchase.itemId })
+        .distinct('senderEmail');
+      const participants = [...new Set([...allEmails, buyerEmail, sellerEmail])];
+
+      // Emit to every room pair so all open chat windows receive the event
+      for (let i = 0; i < participants.length; i++) {
+        for (let j = i + 1; j < participants.length; j++) {
+          const room = getRoomId(itemId, participants[i], participants[j]);
+          global.io && global.io.to(room).emit('conversation_completed', { itemId });
+        }
+      }
+      console.log('[complete] conversation_completed emitted for item:', itemId);
+    } catch (emitErr) {
+      console.error('[complete] socket emit error:', emitErr.message);
+    }
+
+    // Delete all messages for this item — no listing = no chat
+    await Message.deleteMany({ itemId: purchase.itemId });
+    console.log('[complete] messages deleted for item:', purchase.itemId);
+
+    res.json({ success: true, message: 'Purchase completed. Conversation closed.' });
+  } catch (err) {
+    console.error('[PUT /api/purchases/:id/complete]', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
 // ===== CONNECT & START with Socket.io =====
 
 // Deterministic room ID — same for both users regardless of who calls it
@@ -1272,8 +1480,20 @@ function getRoomId(itemId, emailA, emailB) {
 }
 
 mongoose.connect(MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log('✅ Connected to MongoDB Atlas');
+
+    // ── One-time migration: fix legacy items where sold=true but item_status='Available' ──
+    try {
+      const fixed = await Item.updateMany(
+        { sold: true, item_status: 'Available' },
+        { $set: { item_status: 'Sold' } }
+      );
+      if (fixed.modifiedCount > 0)
+        console.log(`🔧 Migrated ${fixed.modifiedCount} legacy sold item(s) to item_status='Sold'`);
+    } catch (migErr) {
+      console.warn('Migration warning:', migErr.message);
+    }
 
     const http = require('http');
     const { Server } = require('socket.io');
@@ -1332,11 +1552,28 @@ mongoose.connect(MONGO_URI)
       });
     });
 
-    server.listen(PORT, () => {
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`⚠️  Port ${PORT} in use — killing old process and retrying in 1s...`);
+        try {
+          require('child_process').execSync(
+            `for /f "tokens=5" %a in ('netstat -ano ^| findstr :${PORT}') do taskkill /F /PID %a`,
+            { shell: 'cmd.exe', stdio: 'pipe' }
+          );
+        } catch(e) { /* already gone */ }
+        setTimeout(() => server.listen(PORT, onListening), 1200);
+      } else {
+        throw err;
+      }
+    });
+
+    function onListening() {
       console.log(`✅ CampusMart server running at http://localhost:${PORT}`);
       console.log(`   Socket.io enabled — real-time chat active`);
       console.log(`   Open http://localhost:${PORT} in your browser\n`);
-    });
+    }
+
+    server.listen(PORT, onListening);
   })
   .catch(err => {
     console.error('❌ MongoDB connection failed:', err.message);

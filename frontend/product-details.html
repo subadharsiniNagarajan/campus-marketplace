@@ -162,6 +162,16 @@
       try {
         var res  = await fetch(API_BASE + '/items/' + id);
         var data = await res.json();
+
+        // 410 Gone = item is sold/reserved — redirect to marketplace
+        if (res.status === 410 || (data && data.gone)) {
+          document.getElementById('loading-state').style.display = 'none';
+          document.getElementById('error-state').style.display   = 'flex';
+          document.querySelector('#error-state h3').textContent  = 'Item No Longer Available';
+          document.querySelector('#error-state p').textContent   = 'This item has been sold and is no longer listed.';
+          return;
+        }
+
         if (!res.ok || !data.item) { showError(); return; }
         var item = data.item;
         currentItem = item;
@@ -226,13 +236,11 @@
       document.getElementById('seller-avatar').textContent = sellerName.charAt(0).toUpperCase();
 
       var isOwn  = user.id && item.user_id && item.user_id.toString() === user.id.toString();
-      var isSold = item.sold;
 
-      if (isSold) {
-        document.getElementById('pd-actions').style.display     = 'none';
-        document.getElementById('pd-own-listing').style.display = 'none';
-        document.getElementById('pd-sold-state').style.display  = 'flex';
-      } else if (isOwn) {
+      // Sold or reserved items should never reach this page for public users.
+      // The backend returns 410 and loadProductDetails handles it above.
+      // This is a final safety guard for own listings only.
+      if (isOwn) {
         document.getElementById('pd-actions').style.display     = 'none';
         document.getElementById('pd-own-listing').style.display = 'block';
         document.getElementById('pd-sold-state').style.display  = 'none';
@@ -314,7 +322,7 @@
     }
 
     async function markAsSold() {
-      if (!currentItem || !confirm('Mark this item as SOLD?')) return;
+      if (!currentItem || !confirm('Mark this item as SOLD? It will be removed from the marketplace.')) return;
       var btn = document.getElementById('btn-mark-sold');
       btn.disabled = true; btn.textContent = 'Updating...';
       try {
@@ -324,10 +332,9 @@
         });
         var data = await res.json();
         if (res.ok) {
-          currentItem.sold = true;
-          document.getElementById('pd-own-listing').style.display = 'none';
-          document.getElementById('pd-sold-state').style.display  = 'flex';
-          showToast('Item marked as sold', 'success');
+          showToast('Item marked as sold. Redirecting...', 'success');
+          // Redirect to marketplace after a short delay — sold items are not shown publicly
+          setTimeout(function() { window.location.href = 'buy.html'; }, 1200);
         } else {
           showToast(data.error || 'Failed to mark as sold', 'error');
           btn.disabled = false; btn.textContent = 'Mark as Sold';

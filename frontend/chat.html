@@ -112,6 +112,7 @@
       <a href="sell.html">&#129689; <span>Sell</span></a>
       <a href="buy.html">&#128722; <span>Buy</span></a>
       <a href="chat.html" class="active">&#128172; <span>Chat</span></a>
+      <a href="requests.html">&#9203; <span>Requests</span></a>
     </div>
     <div class="nav-user">
       <a href="settings.html" title="Profile" style="text-decoration:none;"><div class="avatar" id="avatar-initials">?</div></a>
@@ -172,6 +173,10 @@
       socket.on('room_joined', function(d) { console.log('[Socket] room:', d.room); });
       socket.on('new_message', function(msg) { appendMessage(msg); });
       socket.on('error',       function(d) { console.error('[Socket]', d.message); });
+      // Purchase completed: remove thread silently - no banner, no lock icon
+      socket.on('conversation_completed', function(data) {
+        removeCompletedThread(data.itemId);
+      });
     }
 
     function setSocketStatus(on) {
@@ -340,25 +345,28 @@
         var data = await res.json();
         if (!data.success) { console.warn('[fetchMessages]', data); return; }
         
-        // Check item status
-        var itemStatus = data.itemStatus || 'Available';
-        var isClosed = (itemStatus === 'Reserved' || itemStatus === 'Sold');
+        var itemStatus    = data.itemStatus || 'Available';
+        var chatCompleted = data.chatCompleted || (itemStatus === 'Completed');
+        var isReserved    = (itemStatus === 'Reserved');
+        // Completed: remove this thread silently - no banner, no lock icon
+        if (chatCompleted) {
+          removeCompletedThread(activeThread ? activeThread.itemId : '');
+          return;
+        }
         
         var area = document.getElementById('messages-area');
         if (!area) return;
         area.innerHTML = '';
         renderedMsgIds.clear();
         
-        // Show closed banner if conversation is locked
-        if (isClosed) {
+        // Reserved: show item-reserved banner (still visible until completion)
+        if (isReserved) {
           var banner = document.createElement('div');
           banner.className = 'chat-closed-banner';
-          banner.innerHTML = 
+          banner.innerHTML =
             '<div class="chat-closed-icon">🔒</div>' +
-            '<div class="chat-closed-title">Conversation Closed</div>' +
-            '<div class="chat-closed-message">' +
-            'This item is no longer available. This purchase conversation has been archived.' +
-            '</div>';
+            '<div class="chat-closed-title">Item Reserved</div>' +
+            '<div class="chat-closed-message">This item is reserved. Waiting for purchase to complete.</div>';
           area.appendChild(banner);
         }
         
@@ -376,21 +384,16 @@
           });
         }
         
-        // Lock input area if conversation is closed
+        // Lock input only when Reserved
         var inputArea = document.querySelector('.chat-input-area');
-        if (inputArea) {
-          if (isClosed) {
-            inputArea.classList.add('locked');
-            var textarea = document.getElementById('msg-input');
-            if (textarea) {
-              textarea.placeholder = 'This conversation is closed';
-              textarea.disabled = true;
-            }
-            var sendBtn = document.getElementById('send-btn');
-            if (sendBtn) sendBtn.disabled = true;
-            var attachBtn = document.querySelector('.btn-attach');
-            if (attachBtn) attachBtn.disabled = true;
-          }
+        if (inputArea && isReserved) {
+          inputArea.classList.add('locked');
+          var textarea = document.getElementById('msg-input');
+          if (textarea) { textarea.placeholder = 'Awaiting purchase completion'; textarea.disabled = true; }
+          var sendBtn = document.getElementById('send-btn');
+          if (sendBtn) sendBtn.disabled = true;
+          var attachBtn = document.querySelector('.btn-attach');
+          if (attachBtn) attachBtn.disabled = true;
         }
         
         scrollToBottom();
@@ -476,6 +479,36 @@
       var d = document.createElement('div');
       d.textContent = s || '';
       return d.innerHTML;
+    }
+
+    // Silently remove a completed thread from UI - no banner shown to user
+    function removeCompletedThread(itemId) {
+      if (!itemId) return;
+      // Remove sidebar entries for this item
+      document.querySelectorAll('.thread-item').forEach(function(el) {
+        if (el.dataset.key && el.dataset.key.startsWith(itemId + '__')) el.remove();
+      });
+      // Remove from in-memory store
+      Object.keys(threadStore).forEach(function(k) {
+        if (k.startsWith(itemId + '__')) delete threadStore[k];
+      });
+      // If this thread is currently open, reset the panel to empty state
+      if (activeThread && activeThread.itemId === itemId) {
+        activeThread = null;
+        var panel = document.getElementById('chat-panel');
+        if (panel) {
+          panel.innerHTML = '<div class="chat-empty-state" id="chat-empty">'
+            + '<div class="ce-icon">&#128172;</div>'
+            + '<strong>Select a conversation</strong>'
+            + '<span style="font-size:0.85rem;">or click Message Seller on any item</span>'
+            + '</div>';
+        }
+      }
+      // Show empty-state in sidebar if no threads remain
+      var list = document.getElementById('threads-list');
+      if (list && !list.querySelector('.thread-item')) {
+        list.innerHTML = '<div class="no-threads">No active conversations.<br>Click Message Seller on any item.</div>';
+      }
     }
 
     initSocket();

@@ -393,3 +393,183 @@ async function handleSell(e) {
 if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
   if (getUser()) window.location.href = 'dashboard.html';
 }
+
+// ===== NOTIFICATION BELL =====
+// Injected into every page's .nav-user automatically on DOMContentLoaded.
+// Stores lastSeen timestamp in localStorage to track unread notifications.
+
+(function () {
+  const STORAGE_KEY = 'campusmart_notif_last_seen';
+  const POLL_MS     = 30000; // refresh every 30 seconds
+  let   _dropOpen   = false;
+  let   _pollTimer  = null;
+  let   _lastData   = null;
+
+  // Only run on pages that have a logged-in user and a .nav-user element
+  document.addEventListener('DOMContentLoaded', function () {
+    var user    = getUser();
+    var navUser = document.querySelector('.nav-user');
+    if (!user || !navUser) return;
+
+    // Build and inject the bell HTML
+    var wrap = document.createElement('div');
+    wrap.className = 'notif-bell-wrap';
+    wrap.id        = 'notif-bell-wrap';
+    wrap.innerHTML =
+      '<button class="notif-bell-btn" id="notif-bell-btn" '
+      +   'aria-label="Notifications" onclick="window._notifToggle()">'
+      +   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" '
+      +       'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+      +     '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>'
+      +     '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>'
+      +   '</svg>'
+      +   '<span class="notif-count" id="notif-count" style="display:none">0</span>'
+      + '</button>'
+      + '<div class="notif-dropdown" id="notif-dropdown">'
+      +   '<div class="notif-header">'
+      +     '<h4>Notifications</h4>'
+      +     '<button class="notif-mark-read" onclick="window._notifMarkRead()">Mark all read</button>'
+      +   '</div>'
+      +   '<div class="notif-list" id="notif-list">'
+      +     '<div class="notif-empty">Loading...</div>'
+      +   '</div>'
+      +   '<div class="notif-footer"><a href="requests.html">View all requests →</a></div>'
+      + '</div>';
+
+    // Insert before the avatar link (first child of nav-user)
+    navUser.insertBefore(wrap, navUser.firstChild);
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (ev) {
+      if (_dropOpen && !wrap.contains(ev.target)) {
+        _closeDropdown();
+      }
+    });
+
+    // Initial fetch then poll
+    _fetchNotifications();
+    _pollTimer = setInterval(_fetchNotifications, POLL_MS);
+  });
+
+  // ── Toggle dropdown ──────────────────────────────────────────────
+  window._notifToggle = function () {
+    _dropOpen ? _closeDropdown() : _openDropdown();
+  };
+
+  function _openDropdown() {
+    var dd = document.getElementById('notif-dropdown');
+    if (!dd) return;
+    dd.classList.add('open');
+    _dropOpen = true;
+    // If there are unread notifications, render detailed list
+    _fetchNotifications(true);
+  }
+
+  function _closeDropdown() {
+    var dd = document.getElementById('notif-dropdown');
+    if (dd) dd.classList.remove('open');
+    _dropOpen = false;
+  }
+
+  // ── Mark all read ────────────────────────────────────────────────
+  window._notifMarkRead = function () {
+    localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    _updateBadge(0);
+    _renderList({ total: 0, breakdown: { newRequests:0, accepted:0, rejected:0, messages:0 } });
+    _closeDropdown();
+    // Clear pointer so next fetch starts fresh
+    _lastData = null;
+  };
+
+  // ── Fetch from backend ───────────────────────────────────────────
+  async function _fetchNotifications(withDetail) {
+    var user = getUser();
+    if (!user) return;
+    var lastSeen = localStorage.getItem(STORAGE_KEY) || '0';
+    try {
+      var res  = await fetch(API + '/api/notifications?email='
+        + encodeURIComponent(user.email) + '&lastSeen=' + encodeURIComponent(lastSeen));
+      if (!res.ok) return;
+      var data = await res.json();
+      if (!data.success) return;
+      _lastData = data;
+      _updateBadge(data.total);
+      if (_dropOpen || withDetail) _renderList(data);
+    } catch (e) { /* silent — don't break the page */ }
+  }
+
+  // ── Update the red count badge ───────────────────────────────────
+  function _updateBadge(count) {
+    var badge = document.getElementById('notif-count');
+    var btn   = document.getElementById('notif-bell-btn');
+    if (!badge || !btn) return;
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : String(count);
+      badge.style.display = 'flex';
+      btn.classList.add('has-notif');
+    } else {
+      badge.style.display = 'none';
+      btn.classList.remove('has-notif');
+    }
+  }
+
+  // ── Render the dropdown list ─────────────────────────────────────
+  function _renderList(data) {
+    var list = document.getElementById('notif-list');
+    if (!list) return;
+    var b    = data.breakdown || {};
+    var rows = [];
+
+    if (b.newRequests > 0) {
+      rows.push({
+        icon:  '🔔', cls: 'ni-request',
+        title: b.newRequests === 1
+          ? 'You have 1 new purchase request'
+          : 'You have ' + b.newRequests + ' new purchase requests',
+        link:  'requests.html'
+      });
+    }
+    if (b.accepted > 0) {
+      rows.push({
+        icon:  '✅', cls: 'ni-accepted',
+        title: b.accepted === 1
+          ? 'Your request was accepted!'
+          : b.accepted + ' of your requests were accepted!',
+        link:  'requests.html'
+      });
+    }
+    if (b.rejected > 0) {
+      rows.push({
+        icon:  '❌', cls: 'ni-rejected',
+        title: b.rejected === 1
+          ? 'Your request was rejected'
+          : b.rejected + ' of your requests were rejected',
+        link:  'requests.html'
+      });
+    }
+    if (b.messages > 0) {
+      rows.push({
+        icon:  '💬', cls: 'ni-message',
+        title: b.messages === 1
+          ? 'You have 1 new message'
+          : 'You have ' + b.messages + ' new messages',
+        link:  'chat.html'
+      });
+    }
+
+    if (!rows.length) {
+      list.innerHTML = '<div class="notif-empty">You\'re all caught up! 🎉</div>';
+      return;
+    }
+
+    list.innerHTML = rows.map(function (r) {
+      return '<a href="' + r.link + '" class="notif-item unread" '
+        +   'style="text-decoration:none;" onclick="_notifMarkRead()">'
+        +   '<div class="notif-icon ' + r.cls + '">' + r.icon + '</div>'
+        +   '<div class="notif-text">'
+        +     '<div class="notif-title">' + r.title + '</div>'
+        +   '</div>'
+        + '</a>';
+    }).join('');
+  }
+}());

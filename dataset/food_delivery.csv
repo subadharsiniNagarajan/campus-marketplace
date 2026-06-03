@@ -1,0 +1,101 @@
+Order_ID,Customer_Name,Restaurant_Name,Food_Item,Cuisine_Type,Order_Date,Order_Time,Delivery_Time_Minutes,Distance_KM,Order_Value,Payment_Method,Rating,Delivery_Status
+1001,Rahul Sharma,Spice Garden,Chicken Biryani,Indian,2024-01-15,19:30,35,5.2,450,UPI,4.5,Delivered
+1002,Priya Singh,Pizza Hub,Margherita Pizza,Italian,2024-01-15,20:15,42,7.8,380,Credit Card,4.2,Delivered
+1003,Amit Kumar,Burger King,Veg Burger,Fast Food,2024-01-15,13:45,25,3.5,250,Cash,4.8,Delivered
+1004,Sneha Patel,Chinese Wok,Hakka Noodles,Chinese,2024-01-15,21:00,38,6.1,320,UPI,4.0,Delivered
+1005,Vikram Reddy,Spice Garden,Paneer Tikka,Indian,2024-01-16,19:45,40,5.8,400,Debit Card,4.6,Delivered
+1006,Anjali Mehta,Pizza Hub,Pepperoni Pizza,Italian,2024-01-16,20:30,45,8.2,520,UPI,3.8,Delivered
+1007,Rohan Gupta,Burger King,Chicken Burger,Fast Food,2024-01-16,14:20,28,4.1,280,Cash,4.7,Delivered
+1008,Neha Joshi,Chinese Wok,Fried Rice,Chinese,2024-01-16,21:15,35,5.5,290,UPI,4.3,Delivered
+1009,Karan Verma,Spice Garden,Butter Chicken,Indian,2024-01-17,19:20,32,4.8,480,Credit Card,4.9,Delivered
+1010,Pooja Desai,Pizza Hub,Veggie Supreme,Italian,2024-01-17,20:00,50,9.1,450,UPI,3.5,Delivered
+1011,Arjun Nair,Burger King,Cheese Burger,Fast Food,2024-01-17,13:30,22,2.9,220,Cash,4.6,Delivered
+1012,Divya Iyer,Chinese Wok,Manchurian,Chinese,2024-01-17,21:30,41,6.8,310,Debit Card,4.1,Delivered
+1013,Sanjay Pillai,Spice Garden,Chicken Biryani,Indian,2024-01-18,19:50,36,5.4,450,UPI,4.7,Delivered
+1014,Kavya Rao,Pizza Hub,Margherita Pizza,Italian,2024-01-18,20:45,48,8.5,380,Credit Card,3.9,Delivered
+1015,Aditya Shah,Burger King,Veg Burger,Fast Food,2024-01-18,14:00,26,3.7,250,Cash,4.5,Delivered
+1016,Ritu Kapoor,Chinese Wok,Hakka Noodles,Chinese,2024-01-18,21:45,39,6.3,320,UPI,4.2,Delivered
+1017,Manish Agarwal,Spice Garden,Paneer Tikka,Indian,2024-01-19,19:35,38,5.6,400,Debit Card,4.4,Delivered
+1018,Swati Bansal,Pizza Hub,Pepperoni Pizza,Italian,2024-01-19,20:20,44,7.9,520,UPI,4.0,Delivered
+1019,Nikhil Saxena,Burger King,Chicken Burger,Fast Food,2024-01-19,13:50,27,3.8,280,Cash,4.8,Delivered
+1020,Megha Tiwari,Chinese Wok,Fried Rice,Chinese,2024-01-19,21:20,37,5.9,290,UPI,4.3,Delivered
+1021,Rajesh Kumar,Spice Garden,Butter Chicken,Indian,2024-01-20,19:25,33,4.9,480,Credit Card,4.8,Delivered
+1022,Anita Sharma,Pizza Hub,Veggie Supreme,Italian,2024-01-20,20:10,52,9.3,450,UPI,3.6,Delivered
+1023,Deepak Singh,Burger King,Cheese Burger,Fast Food,2024-01-20,14:15,24,3.2,220,Cash,4.7,Delivered
+1024,Preeti Malhotra,Chinese Wok,Manchurian,Chinese,2024-01-20,21:35,42,7.0,310,Debit Card,4.0,Delivered
+1025,Gaurav Jain,Spice Garden,Chicken Biryani,Indian,2024-01-21,19:40,34,5.3,450,UPI,4.6,Delivered
+1026,Shruti Reddy,Pizza Hub,Margherita Pizza,Italian,2024-01-21,20:25,46,8.0,380,Credit Card,4.1,Delivered
+1027,Varun Chopra,Burger King,Veg Burger,Fast Food,2024-01-21,13:40,23,3.0,250,Cash,4.9,Delivered
+1028,Nisha Gupta,Chinese Wok,Hakka Noodles,Chinese,2024-01-21,21:10,36,6.0,320,UPI,4.4,Delivered
+1029,Harsh Patel,Spice Garden,Paneer Tikka,Indian,2024-01-22,19:55,39,5.7,400,Debit Card,4.3,Delivered
+1030,Tanvi Mehta,Pizza Hub,Pepperoni Pizza,Italian,2024-01-22,20:35,47,8.3,520,UPI,3.7,Delivered
+1031,Rohit Verma,Burger King,Chicken Burger,Fast Food,2024-01-22,14:10,29,4.0,280,Cash,4.6,Delivered
+1032,Simran Kaur,Chinese Wok,Fried Rice,Chinese,2024-01-22,21:25,38,6.2,290,UPI,4.2,Delivered
+1033,Akash Desai,Spice Garden,Butter Chicken,Indian,2024-01-23,19:30,31,4.7,480,Credit Card,4.9,Delivered
+1034,Isha Nair,Pizza Hub,Veggie Supreme,Italian,2024-01-23,20:05,51,9.0,450,UPI,3.8,Delivered
+1035,Vishal Shah,Burger King,Cheese Burger,Fast Food,2024-01-23,13:55,25,3.4,220,Cash,4.5,Delivered
+1036,Pallavi Iyer,Chinese Wok,Manchurian,Chinese,2024-01-23,21:40,40,6.7,310,Debit Card,4.1,Delivered
+1037,Suresh Pillai,Spice Garden,Chicken Biryani,Indian,2024-01-24,19:45,37,5.5,450,UPI,4.7,Delivered
+1038,Kritika Rao,Pizza Hub,Margherita Pizza,Italian,2024-01-24,20:50,49,8.7,380,Credit Card,3.9,Delivered
+1039,Yash Agarwal,Burger King,Veg Burger,Fast Food,2024-01-24,14:05,26,3.6,250,Cash,4.8,Delivered
+1040,Sakshi Kapoor,Chinese Wok,Hakka Noodles,Chinese,2024-01-24,21:50,41,6.5,320,UPI,4.0,Delivered
+1041,Mohit Bansal,Spice Garden,Paneer Tikka,Indian,2024-01-25,19:50,35,5.4,400,Debit Card,4.5,Delivered
+1042,Tanya Saxena,Pizza Hub,Pepperoni Pizza,Italian,2024-01-25,20:15,43,7.7,520,UPI,4.2,Delivered
+1043,Abhishek Tiwari,Burger King,Chicken Burger,Fast Food,2024-01-25,13:45,28,3.9,280,Cash,4.7,Delivered
+1044,Riya Kumar,Chinese Wok,Fried Rice,Chinese,2024-01-25,21:15,36,5.8,290,UPI,4.3,Delivered
+1045,Siddharth Sharma,Spice Garden,Butter Chicken,Indian,2024-01-26,19:35,32,4.8,480,Credit Card,4.8,Delivered
+1046,Aditi Singh,Pizza Hub,Veggie Supreme,Italian,2024-01-26,20:20,53,9.4,450,UPI,3.5,Delivered
+1047,Kartik Malhotra,Burger King,Cheese Burger,Fast Food,2024-01-26,14:20,24,3.1,220,Cash,4.6,Delivered
+1048,Nidhi Jain,Chinese Wok,Manchurian,Chinese,2024-01-26,21:30,39,6.6,310,Debit Card,4.2,Delivered
+1049,Pranav Reddy,Spice Garden,Chicken Biryani,Indian,2024-01-27,19:40,34,5.2,450,UPI,4.6,Delivered
+1050,Ishita Chopra,Pizza Hub,Margherita Pizza,Italian,2024-01-27,20:30,45,8.1,380,Credit Card,4.0,Delivered
+1051,Ayush Gupta,Burger King,Veg Burger,Fast Food,2024-01-27,13:50,27,3.8,250,Cash,4.9,Delivered
+1052,Diya Patel,Chinese Wok,Hakka Noodles,Chinese,2024-01-27,21:20,37,6.1,320,UPI,4.4,Delivered
+1053,Shubham Mehta,Spice Garden,Paneer Tikka,Indian,2024-01-28,19:55,40,5.9,400,Debit Card,4.3,Delivered
+1054,Ananya Verma,Pizza Hub,Pepperoni Pizza,Italian,2024-01-28,20:40,46,8.4,520,UPI,3.8,Delivered
+1055,Aryan Desai,Burger King,Chicken Burger,Fast Food,2024-01-28,14:15,29,4.2,280,Cash,4.5,Delivered
+1056,Khushi Nair,Chinese Wok,Fried Rice,Chinese,2024-01-28,21:35,38,6.4,290,UPI,4.1,Delivered
+1057,Vivek Shah,Spice Garden,Butter Chicken,Indian,2024-01-29,19:30,33,5.0,480,Credit Card,4.9,Delivered
+1058,Muskan Iyer,Pizza Hub,Veggie Supreme,Italian,2024-01-29,20:10,50,8.9,450,UPI,3.7,Delivered
+1059,Raghav Pillai,Burger King,Cheese Burger,Fast Food,2024-01-29,14:00,25,3.3,220,Cash,4.7,Delivered
+1060,Navya Rao,Chinese Wok,Manchurian,Chinese,2024-01-29,21:45,41,6.9,310,Debit Card,4.0,Delivered
+1061,Sahil Agarwal,Spice Garden,Chicken Biryani,Indian,2024-01-30,19:45,36,5.6,450,UPI,4.8,Delivered
+1062,Jiya Kapoor,Pizza Hub,Margherita Pizza,Italian,2024-01-30,20:25,48,8.6,380,Credit Card,3.9,Delivered
+1063,Aarav Bansal,Burger King,Veg Burger,Fast Food,2024-01-30,13:55,26,3.5,250,Cash,4.6,Delivered
+1064,Kiara Saxena,Chinese Wok,Hakka Noodles,Chinese,2024-01-30,21:25,39,6.3,320,UPI,4.2,Delivered
+1065,Dhruv Tiwari,Spice Garden,Paneer Tikka,Indian,2024-01-31,19:50,38,5.8,400,Debit Card,4.4,Delivered
+1066,Avni Kumar,Pizza Hub,Pepperoni Pizza,Italian,2024-01-31,20:35,44,7.9,520,UPI,4.1,Delivered
+1067,Reyansh Sharma,Burger King,Chicken Burger,Fast Food,2024-01-31,14:10,28,4.0,280,Cash,4.8,Delivered
+1068,Myra Singh,Chinese Wok,Fried Rice,Chinese,2024-01-31,21:30,37,6.0,290,UPI,4.3,Delivered
+1069,Vihaan Malhotra,Spice Garden,Butter Chicken,Indian,2024-02-01,19:35,32,4.9,480,Credit Card,4.7,Delivered
+1070,Saanvi Jain,Pizza Hub,Veggie Supreme,Italian,2024-02-01,20:15,52,9.2,450,UPI,3.6,Delivered
+1071,Atharv Reddy,Burger King,Cheese Burger,Fast Food,2024-02-01,14:05,23,3.2,220,Cash,4.9,Delivered
+1072,Pari Chopra,Chinese Wok,Manchurian,Chinese,2024-02-01,21:40,40,6.8,310,Debit Card,4.1,Delivered
+1073,Advait Gupta,Spice Garden,Chicken Biryani,Indian,2024-02-02,19:40,35,5.3,450,UPI,4.6,Delivered
+1074,Aadhya Patel,Pizza Hub,Margherita Pizza,Italian,2024-02-02,20:30,47,8.2,380,Credit Card,4.0,Delivered
+1075,Kabir Mehta,Burger King,Veg Burger,Fast Food,2024-02-02,13:50,27,3.7,250,Cash,4.5,Delivered
+1076,Sara Verma,Chinese Wok,Hakka Noodles,Chinese,2024-02-02,21:20,38,6.2,320,UPI,4.3,Delivered
+1077,Shivansh Desai,Spice Garden,Paneer Tikka,Indian,2024-02-03,19:55,39,5.7,400,Debit Card,4.4,Delivered
+1078,Anaya Nair,Pizza Hub,Pepperoni Pizza,Italian,2024-02-03,20:45,45,8.0,520,UPI,3.9,Delivered
+1079,Arnav Shah,Burger King,Chicken Burger,Fast Food,2024-02-03,14:15,29,4.1,280,Cash,4.7,Delivered
+1080,Ira Iyer,Chinese Wok,Fried Rice,Chinese,2024-02-03,21:35,36,5.9,290,UPI,4.2,Delivered
+1081,Rudra Pillai,Spice Garden,Butter Chicken,Indian,2024-02-04,19:30,31,4.7,480,Credit Card,4.9,Delivered
+1082,Anika Rao,Pizza Hub,Veggie Supreme,Italian,2024-02-04,20:10,51,9.1,450,UPI,3.7,Delivered
+1083,Shaurya Agarwal,Burger King,Cheese Burger,Fast Food,2024-02-04,14:00,24,3.0,220,Cash,4.8,Delivered
+1084,Zara Kapoor,Chinese Wok,Manchurian,Chinese,2024-02-04,21:50,42,7.0,310,Debit Card,4.0,Delivered
+1085,Ayaan Bansal,Spice Garden,Chicken Biryani,Indian,2024-02-05,19:45,37,5.5,450,UPI,4.7,Delivered
+1086,Pihu Saxena,Pizza Hub,Margherita Pizza,Italian,2024-02-05,20:35,49,8.5,380,Credit Card,3.8,Delivered
+1087,Veer Tiwari,Burger King,Veg Burger,Fast Food,2024-02-05,13:45,26,3.6,250,Cash,4.6,Delivered
+1088,Shanaya Kumar,Chinese Wok,Hakka Noodles,Chinese,2024-02-05,21:25,39,6.4,320,UPI,4.1,Delivered
+1089,Aditya Sharma,Spice Garden,Paneer Tikka,Indian,2024-02-06,19:50,38,5.8,400,Debit Card,4.5,Delivered
+1090,Mira Singh,Pizza Hub,Pepperoni Pizza,Italian,2024-02-06,20:20,44,7.8,520,UPI,4.2,Delivered
+1091,Lakshya Malhotra,Burger King,Chicken Burger,Fast Food,2024-02-06,14:10,28,3.9,280,Cash,4.9,Delivered
+1092,Nitya Jain,Chinese Wok,Fried Rice,Chinese,2024-02-06,21:30,37,6.1,290,UPI,4.3,Delivered
+1093,Ishaan Reddy,Spice Garden,Butter Chicken,Indian,2024-02-07,19:35,33,5.0,480,Credit Card,4.8,Delivered
+1094,Aanya Chopra,Pizza Hub,Veggie Supreme,Italian,2024-02-07,20:15,53,9.3,450,UPI,3.5,Delivered
+1095,Ranveer Gupta,Burger King,Cheese Burger,Fast Food,2024-02-07,14:05,25,3.4,220,Cash,4.7,Delivered
+1096,Tara Patel,Chinese Wok,Manchurian,Chinese,2024-02-07,21:45,40,6.7,310,Debit Card,4.2,Delivered
+1097,Aarohi Mehta,Spice Garden,Chicken Biryani,Indian,2024-02-08,19:40,34,5.2,450,UPI,4.6,Delivered
+1098,Krish Verma,Pizza Hub,Margherita Pizza,Italian,2024-02-08,20:30,46,8.1,380,Credit Card,4.0,Delivered
+1099,Diya Desai,Burger King,Veg Burger,Fast Food,2024-02-08,13:55,27,3.8,250,Cash,4.5,Delivered
+1100,Arjun Nair,Chinese Wok,Hakka Noodles,Chinese,2024-02-08,21:20,38,6.3,320,UPI,4.4,Delivered
