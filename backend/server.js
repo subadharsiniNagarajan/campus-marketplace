@@ -12,9 +12,9 @@ const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
 
 const app = express();
-const PORT = 3000;
-const MONGO_URI = 'mongodb+srv://campusmart:suba%401401@cluster0.k8zcvfn.mongodb.net/campusmart?retryWrites=true&w=majority&appName=Cluster0';
-const JWT_SECRET = 'campusmart_admin_jwt_secret_2024';
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://campusmart:suba%401401@cluster0.k8zcvfn.mongodb.net/campusmart?retryWrites=true&w=majority&appName=Cluster0';
+const JWT_SECRET = process.env.JWT_SECRET || 'campusmart_admin_jwt_secret_2024';
 
 // Middleware
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'] }));
