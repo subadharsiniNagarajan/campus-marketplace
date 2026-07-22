@@ -1491,6 +1491,11 @@ function getRoomId(itemId, emailA, emailB) {
   return `${itemId}__${sorted}`;
 }
 
+// Catch-all route: serve index.html for any unmatched routes (client-side routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+});
+
 mongoose.connect(MONGO_URI)
   .then(async () => {
     console.log('✅ Connected to MongoDB Atlas');
