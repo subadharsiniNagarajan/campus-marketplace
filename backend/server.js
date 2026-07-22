@@ -8,13 +8,20 @@ const path = require('path');
 const fs = require('fs');
 const dns = require('dns');
 
-// Force Google/Cloudflare DNS to bypass system DNS issues
-dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+// Force Google/Cloudflare DNS to bypass system DNS issues (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://campusmart:suba%401401@cluster0.k8zcvfn.mongodb.net/campusmart?retryWrites=true&w=majority&appName=Cluster0';
 const JWT_SECRET = process.env.JWT_SECRET || 'campusmart_admin_jwt_secret_2024';
+
+console.log('🚀 Starting CampusMart server...');
+console.log('📍 Port:', PORT);
+console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
+console.log('🔗 Connecting to MongoDB...');
 
 // Middleware
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'] }));
