@@ -1561,19 +1561,19 @@ mongoose.connect(MONGO_URI)
             { shell: 'cmd.exe', stdio: 'pipe' }
           );
         } catch(e) { /* already gone */ }
-        setTimeout(() => server.listen(PORT, onListening), 1200);
+        setTimeout(() => server.listen(PORT, '0.0.0.0', onListening), 1200);
       } else {
         throw err;
       }
     });
 
     function onListening() {
-      console.log(`✅ CampusMart server running at http://localhost:${PORT}`);
+      console.log(`✅ CampusMart server running on port ${PORT}`);
       console.log(`   Socket.io enabled — real-time chat active`);
-      console.log(`   Open http://localhost:${PORT} in your browser\n`);
+      console.log(`   Server is listening on all network interfaces\n`);
     }
 
-    server.listen(PORT, onListening);
+    server.listen(PORT, '0.0.0.0', onListening);
   })
   .catch(err => {
     console.error('❌ MongoDB connection failed:', err.message);
