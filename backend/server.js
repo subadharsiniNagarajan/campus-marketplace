@@ -177,6 +177,11 @@ function isCollegeEmail(email) {
 
 // ===== ROUTES =====
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'CampusMart server is running' });
+});
+
 // POST /signup
 app.post('/signup', async (req, res) => {
   try {

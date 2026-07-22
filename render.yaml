@@ -3,7 +3,6 @@ services:
     name: campus-marketplace
     env: node
     region: oregon
-    rootDir: .
     buildCommand: cd backend && npm install
     startCommand: cd backend && node server.js
     envVars:
