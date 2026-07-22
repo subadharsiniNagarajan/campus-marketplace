@@ -3,6 +3,8 @@ const API = window.location.hostname === 'localhost' || window.location.hostname
   ? 'http://localhost:3000' 
   : window.location.origin;
 
+console.log('CampusMart API URL:', API);
+
 // ===== AUTH HELPERS =====
 function saveUser(user) {
   localStorage.setItem('campusmart_user', JSON.stringify(user));
