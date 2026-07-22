@@ -29,16 +29,6 @@ app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// No-cache for HTML files so browser always gets the latest version
-app.use(express.static(path.join(__dirname, '../frontend'), {
-  setHeaders: function(res, filePath) {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-    }
-  }
-}));
 
 // Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
@@ -1490,6 +1480,22 @@ function getRoomId(itemId, emailA, emailB) {
   const sorted = [emailA.toLowerCase(), emailB.toLowerCase()].sort().join('__');
   return `${itemId}__${sorted}`;
 }
+
+// Serve frontend static files (AFTER all API routes to avoid conflicts)
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  setHeaders: function(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
+
+// Catch-all route: serve index.html for client-side routing (MUST be last)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+});
 
 mongoose.connect(MONGO_URI)
   .then(async () => {
