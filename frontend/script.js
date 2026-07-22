@@ -75,8 +75,10 @@ async function handleLogin(e) {
       saveUser({ id: data.userId, name: data.name, email, token: data.token });
       window.location.href = 'dashboard.html';
     }
-  } catch {
-    showAlert('alert', 'Cannot connect to server. Is it running?');
+  } catch (err) {
+    console.error('Login error:', err);
+    console.error('API URL:', API);
+    showAlert('alert', 'Cannot connect to server. Check console for details.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = 'Login';
@@ -112,8 +114,10 @@ async function handleSignup(e) {
         window.location.href = 'dashboard.html';
       }, 1200);
     }
-  } catch {
-    showAlert('alert', 'Cannot connect to server. Is it running?');
+  } catch (err) {
+    console.error('Signup error:', err);
+    console.error('API URL:', API);
+    showAlert('alert', 'Cannot connect to server. Check console for details.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = 'Create Account';
