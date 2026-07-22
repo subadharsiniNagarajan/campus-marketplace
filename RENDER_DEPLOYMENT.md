@@ -1,110 +1,192 @@
-# Trifting - Render Deployment Guide
+# Campus Marketplace - Render Deployment Guide
 
-## Live URL
-🚀 **https://trifting.onrender.com**
+## ✅ Deployment Configuration
 
-## Deployment Configuration
+Your Campus Marketplace is now correctly configured to deploy on **Render** with both frontend and backend together.
 
-### 1. Environment Variables (Required)
-Add these in your Render dashboard under **Environment Variables**:
+### 🏗️ Architecture
+
+**Single Service Deployment:**
+- **Backend**: Node.js/Express API running on Render
+- **Frontend**: Static HTML/CSS/JS files served by the Express backend
+- **Database**: MongoDB Atlas (cloud)
+- **File Storage**: Local uploads folder on Render
+
+### 📁 Project Structure
 
 ```
-MONGO_URI=mongodb+srv://campusmart:suba%401401@cluster0.k8zcvfn.mongodb.net/campusmart?retryWrites=true&w=majority&appName=Cluster0
-
-JWT_SECRET=campusmart_admin_jwt_secret_2024
-
-NODE_ENV=production
+project/
+├── backend/
+│   ├── server.js          # Express server (serves API + frontend)
+│   ├── package.json       # Backend dependencies
+│   ├── database.db        # SQLite (not used, MongoDB is primary)
+│   └── uploads/          # User uploaded images
+├── frontend/
+│   ├── index.html        # Login/signup page
+│   ├── dashboard.html    # Main marketplace
+│   ├── script.js         # API configuration (auto-detects URL)
+│   └── style.css         # Styles
+└── render.yaml           # Render deployment config
 ```
 
-### 2. Render Settings
+### 🔧 How It Works
 
-**Service Type:** Web Service
+1. **Render builds**: `cd backend && npm install`
+2. **Render starts**: `cd backend && node server.js`
+3. **Express serves**:
+   - API routes: `/api/*`, `/items`, `/signup`, etc.
+   - Static files: Frontend folder at `../frontend`
+   - Uploads: `/uploads/*` folder
+   - Catch-all: Any unmatched route → `index.html`
 
-**Build Settings:**
-- **Build Command:** `cd backend && npm install`
-- **Start Command:** `cd backend && npm start`
-- **Root Directory:** Leave empty (or use `/`)
-- **Environment:** Node
+4. **Frontend detects URL**:
+   ```javascript
+   const API = window.location.hostname === 'localhost' 
+     ? 'http://localhost:3000'  // Development
+     : window.location.origin;   // Production (Render URL)
+   ```
 
-**Advanced Settings:**
-- **Health Check Path:** `/` (optional)
-- **Auto-Deploy:** Yes (deploys on git push)
+### 🚀 Deployment Steps
 
-### 3. Static Frontend Deployment
+1. **Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Your message"
+   git push origin main
+   ```
 
-Since your frontend is static HTML/CSS/JS, you have two options:
+2. **Render Auto-Deploys**:
+   - Render detects the push
+   - Runs build command
+   - Starts the server
+   - Deployment takes 2-3 minutes
 
-#### Option A: Serve frontend from backend (Current Setup)
-The backend already serves static files from the `frontend` folder:
+3. **Access Your App**:
+   - URL: https://campus-marketplace-ywfp.onrender.com
+   - Backend automatically serves frontend
+   - All features work together
+
+### ✅ Key Configuration Files
+
+#### `render.yaml`
+```yaml
+services:
+  - type: web
+    name: campus-marketplace
+    env: node
+    region: oregon
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+```
+
+#### `backend/server.js` (Key Parts)
 ```javascript
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  setHeaders: function(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+  }
+}));
+
+// Serve uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// API routes...
+app.post('/signup', ...);
+app.post('/login', ...);
+app.get('/items', ...);
+
+// Catch-all: serve index.html for client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+});
+
+// Start server on 0.0.0.0 for Render
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ CampusMart server running on port ${PORT}`);
+});
 ```
 
-Frontend will be accessible at: https://trifting.onrender.com
-
-#### Option B: Deploy frontend separately on Render Static Site
-1. Create a new **Static Site** on Render
-2. Point to the `frontend` directory
-3. Update API URLs in frontend files to point to backend service
-
-### 4. CORS Configuration
-
-The backend is configured to allow all origins:
+#### `frontend/script.js`
 ```javascript
-app.use(cors({ origin: '*', ... }));
+// Auto-detect API URL
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:3000' 
+  : window.location.origin;
 ```
 
-For production, you may want to restrict this to your frontend domain.
+### 🔍 Troubleshooting
 
-### 5. File Uploads
+1. **"Cannot connect to server"**
+   - Check Render logs: Dashboard → campus-marketplace → Logs
+   - Verify MongoDB connection successful
+   - Ensure server binds to `0.0.0.0` not `localhost`
 
-⚠️ **Important:** Render's ephemeral filesystem means uploaded files will be lost on service restart.
+2. **Frontend not loading**
+   - Check server.js has `express.static('../frontend')`
+   - Verify catch-all route is last: `app.get('*', ...)`
+   - Clear browser cache (Ctrl+F5)
 
-**Solutions:**
-- Use cloud storage (AWS S3, Cloudinary, etc.)
-- Or accept that uploads are temporary during free tier usage
+3. **API calls failing**
+   - Open browser console (F12)
+   - Check "CampusMart API URL: ..." message
+   - Should show Render URL in production
+   - Check Network tab for failed requests
 
-### 6. Database Connection
+4. **Images not loading**
+   - Render's free tier has ephemeral storage
+   - Uploads are lost on restart
+   - Consider using Cloudinary for production
 
-MongoDB Atlas is already configured. Ensure:
-- Your MongoDB Atlas cluster allows connections from `0.0.0.0/0` (all IPs) or add Render's IPs
-- The database user has read/write permissions
+### 📊 Deployment Status
 
-### 7. Deployment Checklist
+- ✅ GitHub: https://github.com/subadharsiniNagarajan/campus-marketplace.git
+- ✅ Render: https://campus-marketplace-ywfp.onrender.com
+- ✅ MongoDB Atlas: Connected
+- ✅ Socket.io: Real-time chat enabled
+- ✅ Frontend: Served by Express backend
+- ✅ API: All endpoints working
 
-- [x] Update server.js to use environment variables
-- [x] Create render.yaml configuration file
-- [x] Add .env.example for reference
-- [ ] Set environment variables in Render dashboard
-- [ ] Push code to GitHub
-- [ ] Connect Render to GitHub repository
-- [ ] Deploy and test
+### 🎉 Features Deployed
 
-### 8. Post-Deployment Testing
+- ✅ User authentication (signup/login)
+- ✅ Item listing marketplace
+- ✅ Real-time chat (Socket.io)
+- ✅ File uploads
+- ✅ Purchase requests
+- ✅ Admin moderation
+- ✅ Ratings & reviews
+- ✅ Wishlist
 
-Test these endpoints:
-- `GET /` - Frontend homepage
-- `POST /signup` - User registration
-- `POST /login` - User login
-- `GET /items` - Fetch items
-- `POST /admin/login` - Admin login
+### 📝 Notes
 
-### 9. Monitoring
+- **Free Tier Limitations**:
+  - Server sleeps after 15 min inactivity
+  - First request takes 30-60 seconds to wake up
+  - 750 hours/month free
+  - Ephemeral storage (uploads lost on restart)
 
-- Check Render logs for errors
-- Monitor MongoDB Atlas metrics
-- Set up health checks
+- **Production Improvements**:
+  - Use Cloudinary/AWS S3 for uploads
+  - Add Redis for session management
+  - Enable Render persistent disk (paid)
+  - Add custom domain
 
-### 10. Free Tier Limitations
+### 🔗 Useful Links
 
-Render Free Tier:
-- Service spins down after 15 minutes of inactivity
-- First request after spin-down takes 30-60 seconds (cold start)
-- 750 hours/month free (sufficient for one always-on service)
+- [Render Dashboard](https://dashboard.render.com)
+- [GitHub Repository](https://github.com/subadharsiniNagarajan/campus-marketplace.git)
+- [MongoDB Atlas](https://cloud.mongodb.com)
+- [Live Application](https://campus-marketplace-ywfp.onrender.com)
 
-## Support
+---
 
-For issues, check:
-1. Render service logs
-2. MongoDB Atlas connection status
-3. Environment variables configuration
+**Deployment Date**: July 22, 2026  
+**Status**: ✅ Successfully Deployed
