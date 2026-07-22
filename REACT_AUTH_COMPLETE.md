@@ -1,4 +1,4 @@
-﻿# ✅ React Authentication System Created Successfully!
+# ✅ React Authentication System Created Successfully!
 
 ## 📁 Location
 All files are in: react-auth/
