@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -144,7 +144,7 @@
 </head>
 <body>
 
-  <!-- ── Forgot Password Modal ── -->
+  <!-- -- Forgot Password Modal -- -->
   <div class="fp-overlay" id="fp-overlay">
     <div class="fp-modal">
 
@@ -306,7 +306,7 @@
 
   <script src="script.js"></script>
   <script>
-    const API_URL = "http://localhost:3000";
+    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://localhost:3000" : window.location.origin;
     let _fpEmail = "";
 
     function switchTab(tab) {
@@ -321,7 +321,7 @@
       if (a) a.classList.remove("show");
     }
 
-    // ── Forgot Password ──────────────────────────────────────────
+    // -- Forgot Password ------------------------------------------
     function openForgot() {
       // Pre-fill email if already typed
       const emailVal = document.getElementById("login-email").value.trim();

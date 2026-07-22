@@ -1,4 +1,7 @@
-﻿const API = 'http://localhost:3000';
+﻿// Auto-detect API URL: use current origin in production, localhost in development
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:3000' 
+  : window.location.origin;
 
 // ===== AUTH HELPERS =====
 function saveUser(user) {
